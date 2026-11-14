@@ -1,0 +1,265 @@
+// @vitest-environment jsdom
+import { beforeEach, expect, it, vi } from 'vitest';
+vi.mock('obsidian', () => ({
+  ItemView: class { contentEl = document.createElement('div'); app: unknown; constructor(leaf: any) { this.app = leaf.app; } },
+  Menu: class {
+    static items: any[] = [];
+    constructor() { (this.constructor as any).items = []; }
+    addItem(callback: any) {
+      const item: any = { setTitle(title: string) { this.title = title; return this; }, setIcon() { return this; }, setChecked() { return this; }, onClick(run: any) { this.run = run; return this; } };
+      callback(item); (this.constructor as any).items.push(item); return this;
+    }
+    showAtMouseEvent() {}
+    showAtPosition() {}
+  },
+  Plugin: class {}, PluginSettingTab: class {}, Setting: class {},
+  TFile: class {}, Notice: class {}, setIcon: (element: HTMLElement, icon: string) => element.dataset.icon = icon
+}));
+import { PropertiesView } from '../src/main';
+import { PropertyIndex } from '../src/index';
+import { TFile, Menu } from 'obsidian';
+let plugin: any;
+let view: PropertiesView;
+let openFile: ReturnType<typeof vi.fn>;
+beforeEach(async () => {
+  document.body.replaceChildren();
+  const index = new PropertyIndex();
+  index.update('Projects/One.md', { status: 'Done', tags: ['work', 'personal'] });
+  index.update('Two.md', { status: 'Pending' });
+  plugin = { index, prefs: { counts: true, sort: 'name', hidden: '', expanded: [], pinned: [], scope: null, profiles: [], activeProfile: null }, refresh: vi.fn(), rebuild: vi.fn(), save: vi.fn() };
+  openFile = vi.fn().mockResolvedValue(undefined);
+  const app = { vault: { getAbstractFileByPath: () => new TFile() }, workspace: { getLeaf: () => ({ openFile }) } };
+  view = new PropertiesView({ app } as any, plugin);
+  document.body.appendChild(view.contentEl);
+  await view.onOpen();
+});
+const click = (label: string) => (document.querySelector(`[aria-label="${label}"]`) as HTMLElement).click();
+it('uses a single property tree and expands notes inline', () => {
+  expect(document.querySelector('.pv-results')).toBeNull();
+  click('Expand status'); click('Show notes with status: Done (1)');
+  expect(document.querySelector('.pv-values .pv-notes .pv-file')!.textContent).toContain('One');
+  (document.querySelector('.pv-file') as HTMLElement).click(); expect(openFile).toHaveBeenCalledOnce();
+});
+it('scopes the browser to selected properties, including none and all', () => {
+  click('Choose properties to show'); click('Clear property selection');
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('Choose properties');
+  click('Include status'); expect(plugin.prefs.scope).toEqual(['status']);
+  expect(document.querySelector('.pv-tree')!.textContent).not.toContain('tags');
+  click('Show all properties'); expect(plugin.prefs.scope).toBeNull();
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('tags');
+});
+it('filters notes by path and automatically reveals the matching branch', () => {
+  click('Toggle search'); click('Search in: Search everything');
+  (Menu as any).items.find((item: any) => item.title === 'Note names / paths').run();
+  const input = document.querySelector('input')!; input.value = 'Projects/'; input.dispatchEvent(new Event('input'));
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('One');
+  expect(document.querySelector('.pv-tree')!.textContent).not.toContain('Pending');
+  expect(document.querySelectorAll('.pv-file').length).toBeGreaterThan(0);
+});
+it('shows list and date icons before names and respects configured types', () => {
+  plugin.index.update('Three.md', { items: ['a'], due: '2026-11-13', title: '2026-11-13' });
+  (view as any).app.metadataTypeManager = { getAllProperties: () => ({ title: { type: 'text' }, items: { type: 'multitext' }, due: { type: 'date' } }) };
+  view.render();
+  const icon = (key: string) => document.querySelector(`[aria-label="Toggle ${key} (1)"] .pv-type-icon`) as HTMLElement;
+  expect(icon('items').dataset.icon).toBe('list'); expect(icon('due').dataset.icon).toBe('calendar');
+  expect(icon('title').dataset.icon).toBe('text');
+  expect(icon('due').nextElementSibling!.textContent).toBe('due');
+});
+it('updates the expanded note branch after edits/deletion', () => {
+  click('Expand status'); click('Show notes with status: Pending (1)');
+  plugin.index.remove('Two.md'); view.render();
+  expect(document.querySelector('.pv-tree')!.textContent).not.toContain('Pending');
+  expect(document.querySelectorAll('.pv-file')).toHaveLength(0);
+});
+it('keeps refresh, pinning, hiding, and keyboard menus usable', () => {
+  click('Refresh property index'); expect(plugin.rebuild).toHaveBeenCalledOnce();
+  const button = document.querySelector('[aria-label="Toggle tags (1)"]') as HTMLElement;
+  button.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10', shiftKey: true }));
+  (Menu as any).items.find((item: any) => item.title === 'Pin property').run();
+  expect(document.querySelector('.pv-node')!.textContent).toContain('tags');
+  (document.querySelector('.pv-node') as HTMLElement).dispatchEvent(new MouseEvent('contextmenu'));
+  (Menu as any).items.find((item: any) => item.title === 'Hide property').run();
+  expect(document.querySelector('.pv-tree')!.textContent).not.toContain('tags');
+});
+it('opens native Search from a row menu', async () => {
+  const setQuery = vi.fn(); const leaf = { view: { setQuery } };
+  (view as any).app.workspace = { getLeavesOfType: () => [leaf], revealLeaf: vi.fn() };
+  (document.querySelector('[aria-label="Toggle status (2)"]') as HTMLElement).dispatchEvent(new MouseEvent('contextmenu'));
+  (Menu as any).items.find((item: any) => item.title === 'Open in Search').run();
+  await Promise.resolve(); expect(setQuery).toHaveBeenCalledWith('["status"]');
+});
+it('clears search when collapsing all and preserves scoped selection', () => {
+  plugin.prefs.scope = ['status'];
+  click('Toggle search');
+  const input = document.querySelector('input')!; input.value = 'Done'; input.dispatchEvent(new Event('input'));
+  click('Collapse all properties'); expect(input.value).toBe('');
+  expect(document.querySelectorAll('.pv-values')).toHaveLength(0); expect(plugin.prefs.scope).toEqual(['status']);
+});
+it('renders property text without interpreting HTML', () => {
+  plugin.index.update('x.md', { '<img src=x>': '<script>bad</script>' }); view.render();
+  expect(document.querySelector('img')).toBeNull();
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('<img');
+});
+
+it('renders the layout fixture when requested', async () => {
+  if (!process.env.PV_PREVIEW) return;
+  const { writeFileSync, readFileSync } = await import('node:fs');
+  plugin.index.update('Projects/Launch plan.md', { status: 'In progress', due: '2026-11-20', topics: ['Design', 'Product'], effort: 8, published: false });
+  plugin.index.update('Projects/Research.md', { status: 'In progress', due: '2026-11-18', topics: ['Research'], effort: 3, published: true });
+  plugin.prefs.expanded = ['status', 'topics']; view.render();
+  click('Show notes with status: In progress (2)');
+  // Standalone host fixture for CSS QA; actual Obsidian supplies Lucide SVG icons.
+  for (const icon of document.querySelectorAll<HTMLElement>('[data-icon]')) {
+    icon.textContent = ({ 'chevron-down': '⌄', 'chevron-right': '›', 'calendar': '▦', 'list': '☷', 'search': '⌕', 'text': 'T', 'hash': '#', 'check-square': '☑', 'file-text': '▤', 'refresh-cw': '↻', 'list-tree': '☷', 'fold-vertical': '↥' } as Record<string, string>)[icon.dataset.icon!] ?? '◇';
+  }
+  writeFileSync(process.env.PV_PREVIEW, `<!doctype html><html><head><meta charset="utf-8"><style>
+  :root{--text-normal:#dadbe3;--text-muted:#9396a8;--text-faint:#707488;--text-accent:#b4a1ff;--interactive-accent:#9b85ee;--background-primary:#202128;--background-secondary:#292b34;--background-modifier-border:#363843;--background-modifier-hover:#2e303b;--background-modifier-active-hover:#343044;--font-ui-small:13px}*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:#202128;font-family:system-ui}button,input,select{font:inherit;color:inherit}button,select{border:1px solid #363843;border-radius:5px;background:#292b34;padding:4px 8px}input{color:#dadbe3}button{cursor:pointer}.pv-view{height:100vh;width:100%;max-width:480px;border-right:1px solid #363843}
+  ${readFileSync('styles.css', 'utf8')}</style></head><body>${view.contentEl.outerHTML}</body></html>`);
+});
+
+it('defaults to text icons without inferring arrays or date-shaped strings', () => {
+  plugin.index.update('Three.md', { items: ['a'], due: '2026-11-13' }); view.render();
+  expect(document.querySelector('[aria-label="Toggle due (1)"] .pv-type-icon')!.getAttribute('data-icon')).toBe('text');
+  expect(document.querySelector('[aria-label="Toggle items (1)"] .pv-type-icon')!.getAttribute('data-icon')).toBe('text');
+});
+it('puts value expanders first and renders compact inline note names and folders', () => {
+  click('Expand status');
+  const toggle = document.querySelector('[aria-label="Expand notes for status: Done"]') as HTMLElement;
+  expect(toggle.parentElement!.firstElementChild).toBe(toggle);
+  toggle.click();
+  expect(document.querySelector('.pv-end-chevron')).toBeNull();
+  expect(document.querySelector('.pv-note-name')!.textContent).toBe('One');
+  expect(document.querySelector('.pv-note-path')!.textContent).toBe('Projects');
+  click('Collapse notes for status: Done');
+  expect(document.querySelector('.pv-notes')).toBeNull();
+});
+
+it('uses one expand/collapse toggle that follows the current scoped expansion', () => {
+  const toggle = document.querySelector('[aria-label="Expand all properties"]') as HTMLButtonElement;
+  expect(document.querySelector('[aria-label="Collapse all properties"]')).toBeNull();
+  toggle.click();
+  expect(toggle.getAttribute('aria-label')).toBe('Collapse all properties');
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(document.querySelectorAll('.pv-values')).toHaveLength(2);
+  toggle.click();
+  expect(toggle.getAttribute('aria-label')).toBe('Expand all properties');
+  expect(document.querySelectorAll('.pv-values')).toHaveLength(0);
+  plugin.prefs.scope = ['status']; view.render(); toggle.click();
+  expect(plugin.prefs.expanded).toEqual(['status']);
+  expect(toggle.getAttribute('aria-label')).toBe('Collapse all properties');
+  click('Collapse status');
+  expect(toggle.getAttribute('aria-label')).toBe('Expand all properties');
+});
+
+it('searches property choices without changing selection or the tree query', () => {
+  click('Choose properties to show'); click('Clear property selection');
+  const input = document.querySelector('[aria-label="Search properties to select"]') as HTMLInputElement;
+  input.value = 'sta'; input.dispatchEvent(new Event('input'));
+  expect(document.querySelector('[aria-label="Include tags"]')).toBeNull();
+  click('Include status'); expect(plugin.prefs.scope).toEqual(['status']);
+  expect((document.querySelector('[aria-label="Filter properties and values"]') as HTMLInputElement).value).toBe('');
+  input.value = ''; input.dispatchEvent(new Event('input'));
+  expect((document.querySelector('[aria-label="Include status"]') as HTMLInputElement).checked).toBe(true);
+  expect((document.querySelector('[aria-label="Include tags"]') as HTMLInputElement).checked).toBe(false);
+});
+it('updates an open property picker without replacing its search field', () => {
+  click('Choose properties to show');
+  const input = document.querySelector('[aria-label="Search properties to select"]') as HTMLInputElement;
+  input.value = 'due'; input.dispatchEvent(new Event('input')); input.focus();
+  expect(document.querySelector('.pv-scope-choices')!.textContent).toContain('No matching');
+  plugin.index.update('New.md', { due: 'tomorrow' }); view.render();
+  expect(document.querySelector('[aria-label="Search properties to select"]')).toBe(input);
+  expect(document.activeElement).toBe(input);
+  expect(document.querySelector('[aria-label="Include due"]')).not.toBeNull();
+});
+
+function chooseView(value: string) {
+  const select = document.querySelector('[aria-label="Property view"]') as HTMLSelectElement;
+  select.value = value; select.dispatchEvent(new Event('change'));
+}
+function nameProfile(name: string) {
+  (document.querySelector('[aria-label="Profile name"]') as HTMLInputElement).value = name;
+}
+it('creates and switches named selections without overwriting saved profiles', () => {
+  click('Choose properties to show'); click('Clear property selection'); click('Include status');
+  nameProfile('Writing'); click('Save selection as new profile');
+  const writing = plugin.prefs.profiles[0];
+  expect(writing.keys).toEqual(['status']); expect(plugin.prefs.activeProfile).toBe(writing.id);
+  click('Include tags');
+  expect(writing.keys).toEqual(['status']);
+  expect(document.querySelector('[aria-label="Property view"]')!.textContent).toContain('Writing (modified)');
+  nameProfile('Publishing'); click('Save selection as new profile');
+  const publishing = plugin.prefs.profiles[1];
+  chooseView(`profile:${writing.id}`);
+  expect(document.querySelector('.pv-tree')!.textContent).not.toContain('tags');
+  expect(plugin.prefs.scope).toEqual(['status']);
+  chooseView(`profile:${publishing.id}`);
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('tags');
+  expect(plugin.save).toHaveBeenCalled();
+});
+it('updates, renames and deletes a profile without touching notes', () => {
+  click('Choose properties to show'); click('Clear property selection'); click('Include status');
+  nameProfile('Writing'); click('Save selection as new profile');
+  click('Include tags'); click('Update active profile selection');
+  expect(plugin.prefs.profiles[0].keys).toEqual(['status', 'tags']);
+  nameProfile('Editing'); click('Rename active profile');
+  expect(plugin.prefs.profiles[0].name).toBe('Editing');
+  click('Delete active profile');
+  expect(plugin.prefs.profiles).toEqual([]); expect(plugin.prefs.activeProfile).toBeNull();
+  expect(plugin.prefs.scope).toEqual(['status', 'tags']);
+  expect(plugin.index.properties.size).toBe(2);
+});
+it('rejects empty/duplicate names and preserves currently absent property keys', () => {
+  click('Choose properties to show'); nameProfile(' '); click('Save selection as new profile');
+  expect(plugin.prefs.profiles).toEqual([]);
+  plugin.prefs.scope = ['future_property']; view.render();
+  nameProfile('Writing'); click('Save selection as new profile');
+  nameProfile(' writing '); click('Save selection as new profile');
+  expect(plugin.prefs.profiles).toHaveLength(1);
+  expect(plugin.prefs.profiles[0].keys).toEqual(['future_property']);
+  expect(document.querySelector('[aria-label="Include future_property"]')).not.toBeNull();
+  plugin.index.update('Future.md', { future_property: 'yes' }); view.render();
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('future_property');
+});
+
+it('keeps the default header to action/profile rows and toggles search without hidden filtering', () => {
+  const header = document.querySelector('.pv-search-header') as HTMLElement;
+  expect(header.hidden).toBe(true);
+  expect(document.querySelector('.pv-controls')).toBeNull();
+  expect(document.querySelectorAll('.pv-nav-actions button')).toHaveLength(4);
+  const picker = document.querySelector('[aria-label="Choose properties to show"]')!;
+  expect(picker.parentElement).toBe(document.querySelector('[aria-label="Property view"]')!.parentElement);
+  click('Toggle search'); expect(header.hidden).toBe(false);
+  const input = document.querySelector('[aria-label="Filter properties and values"]') as HTMLInputElement;
+  input.value = 'Pending'; input.dispatchEvent(new Event('input'));
+  expect(document.querySelector('.pv-tree')!.textContent).not.toContain('tags');
+  click('Toggle search'); expect(header.hidden).toBe(true); expect(input.value).toBe('');
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('tags');
+  click('Toggle search'); input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  expect(header.hidden).toBe(true);
+});
+it('displays available property counts alongside profile labels and updates them live', () => {
+  const dropdown = document.querySelector('[aria-label="Property view"]') as HTMLSelectElement;
+  expect(dropdown.selectedOptions[0].textContent).toBe('All properties (2)');
+  plugin.prefs.profiles = [{ id: 'writing', name: 'Writing', keys: ['status', 'future'] }];
+  chooseView('all');
+  chooseView('profile:writing');
+  expect(dropdown.selectedOptions[0].textContent).toBe('Writing (1)');
+  plugin.index.update('Future.md', { future: 'yes' }); view.render();
+  expect(dropdown.selectedOptions[0].textContent).toBe('Writing (2)');
+});
+
+it('opens the four-option sort menu and applies and saves the chosen order', () => {
+  const button = document.querySelector('[aria-label="Sort properties"]') as HTMLElement;
+  expect(button.dataset.icon).toBe('arrow-up-narrow-wide');
+  button.click();
+  expect((Menu as any).items.map((item: any) => item.title)).toEqual([
+    'Property name (A to Z)', 'Property name (Z to A)', 'Frequency (high to low)', 'Frequency (low to high)'
+  ]);
+  (Menu as any).items[1].run();
+  expect(plugin.prefs.sort).toBe('name-desc');
+  expect(document.querySelector('.pv-property-row .pv-label')!.textContent).toBe('tags');
+  button.click(); (Menu as any).items[2].run();
+  expect(document.querySelector('.pv-property-row .pv-label')!.textContent).toBe('status');
+  expect(plugin.save).toHaveBeenCalled();
+});

@@ -1,0 +1,61 @@
+import { describe, expect, it } from 'vitest';
+import { PropertyIndex } from '../src/index';
+
+describe('property membership', () => {
+  it('deduplicates repeated list values and counts notes, not assignments', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { status: ['Done', 'done', ['Pending']] });
+    index.update('b.md', { Status: 'DONE' });
+    const key = index.properties.get('status')!;
+    expect(key.paths.size).toBe(2);
+    expect(key.values.size).toBe(2);
+    expect([...key.values.values()].find(v => v.label === 'Done')!.paths.size).toBe(2);
+  });
+  it('handles null, blank, empty lists, false, zero and unsupported objects', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { nil: null, blank: ' ', list: [], boolean: false, number: 0, object: { nested: 1 }, position: {} });
+    expect([...index.properties.get('nil')!.values.values()][0].label).toBe('(empty)');
+    expect(index.properties.get('blank')!.values.size).toBe(1);
+    expect(index.properties.get('list')!.values.size).toBe(1);
+    expect([...index.properties.get('boolean')!.values.values()][0].label).toBe('false');
+    expect([...index.properties.get('number')!.values.values()][0].label).toBe('0');
+    expect(index.properties.get('object')!.paths.size).toBe(1);
+    expect(index.properties.get('object')!.values.size).toBe(0);
+    expect(index.properties.has('position')).toBe(false);
+  });
+  it('removes stale values on edits, deletion and rename', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { status: 'Old' });
+    index.update('a.md', { status: 'New' });
+    expect([...index.properties.get('status')!.values.values()].map(v => v.label)).toEqual(['New']);
+    index.remove('a.md');
+    index.update('renamed.md', { status: 'New' });
+    expect([...index.properties.get('status')!.paths]).toEqual(['renamed.md']);
+    index.update('renamed.md');
+    expect(index.properties.size).toBe(0);
+  });
+  it('does not merge distinct link targets or scalar types', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { related: ['[[A|Same]]', '[[B|Same]]'], value: [false, 'false', 0, '0'] });
+    expect(index.properties.get('related')!.values.size).toBe(2);
+    expect(index.properties.get('value')!.values.size).toBe(4);
+  });
+  it('handles Unicode-equivalent and prototype-like property names', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', JSON.parse('{"__proto__":"safe","constructor":"safe","café":"yes"}'));
+    index.update('b.md', { 'cafe\u0301': 'YES' });
+    expect(index.properties.get('__proto__')!.paths.size).toBe(1);
+    expect(index.properties.get('café')!.paths.size).toBe(2);
+    expect(index.properties.size).toBe(3);
+  });
+});
+
+it('uses configured Obsidian types with a text fallback', async () => {
+  const { propertyType } = await import('../src/index');
+  expect(propertyType('date')).toBe('date');
+  expect(propertyType('multitext')).toBe('multitext');
+  expect(propertyType()).toBe('text');
+  expect(propertyType('mixed')).toBe('text');
+  expect(propertyType('list')).toBe('text');
+  expect(propertyType('constructor')).toBe('text');
+});

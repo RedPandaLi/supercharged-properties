@@ -1,0 +1,37 @@
+{
+  "name": "supercharged-properties",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --noEmit && node esbuild.config.mjs",
+    "test": "vitest run",
+    "lint": "eslint . --max-warnings 0",
+    "validate": "npm run lint && npm run build && npm test && node scripts/validate-release.mjs",
+    "release:prepare": "npm run validate && node scripts/prepare-release.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "esbuild": "^0.28.2",
+    "eslint": "^9.39.5",
+    "eslint-plugin-obsidianmd": "^0.5.1",
+    "jsdom": "^25.0.1",
+    "obsidian": "^1.7.2",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.72.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  },
+  "author": "Ajay Zapadiya",
+  "engines": {
+    "node": "^22.13.0 || ^24.0.0 || >=26.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajay126z/supercharged-properties.git"
+  },
+  "homepage": "https://github.com/ajay126z/supercharged-properties#readme",
+  "bugs": {
+    "url": "https://github.com/ajay126z/supercharged-properties/issues"
+  }
+}

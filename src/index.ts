@@ -1,0 +1,67 @@
+import { readPropertyValues } from './frontmatter-values';
+
+export interface ValueNode { id: string; label: string; paths: Set<string> }
+export interface PropertyNode extends ValueNode { values: Map<string, ValueNode> }
+export const fold = (text: string): string => text.trim().normalize('NFC').toLowerCase();
+export const natural = (a: string, b: string): number => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+
+/** Incremental, read-only frontmatter index. Each note contributes at most one count per row. */
+export class PropertyIndex {
+  properties = new Map<string, PropertyNode>();
+  private memberships = new Map<string, Map<string, Set<string>>>();
+
+  remove(path: string): void {
+    for (const [key, values] of this.memberships.get(path) ?? []) {
+      const property = this.properties.get(key);
+      if (!property) continue;
+      property.paths.delete(path);
+      for (const value of values) {
+        const node = property.values.get(value);
+        node?.paths.delete(path);
+        if (node?.paths.size === 0) property.values.delete(value);
+      }
+      if (!property.paths.size) this.properties.delete(key);
+    }
+    this.memberships.delete(path);
+  }
+
+  update(path: string, frontmatter?: Record<string, unknown>): void {
+    this.remove(path);
+    if (!frontmatter) return;
+    const membership = new Map<string, Set<string>>();
+    for (const [rawKey, rawValue] of Object.entries(frontmatter)) {
+      if (rawKey === 'position') continue; // Obsidian cache metadata, not a YAML property.
+      const key = fold(rawKey);
+      if (!key) continue;
+      let property = this.properties.get(key);
+      if (!property) {
+        property = { id: key, label: rawKey, paths: new Set(), values: new Map() };
+        this.properties.set(key, property);
+      }
+      property.paths.add(path);
+      const values = membership.get(key) ?? new Set<string>();
+      membership.set(key, values);
+      for (const entry of readPropertyValues(rawValue)) {
+        // Keep types distinct, and retain complete wiki links to avoid alias collisions.
+        const id = JSON.stringify([entry.kind, fold(entry.text)]);
+        let node = property.values.get(id);
+        if (!node) {
+          node = { id, label: entry.text || '(empty)', paths: new Set() };
+          property.values.set(id, node);
+        }
+        node.paths.add(path);
+        values.add(id);
+      }
+    }
+    this.memberships.set(path, membership);
+  }
+}
+
+/** Only built-in Obsidian property types; never infer a type from note contents. */
+export const typeIcons: Record<string, string> = {
+  text: 'text', multitext: 'list', aliases: 'list', tags: 'tags',
+  number: 'hash', checkbox: 'check-square', date: 'calendar', datetime: 'calendar-clock'
+};
+export function propertyType(configured?: string): string {
+  return configured && Object.prototype.hasOwnProperty.call(typeIcons, configured) ? configured : 'text';
+}
