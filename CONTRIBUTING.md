@@ -33,7 +33,7 @@ Run `npm run lint` and `npm test` before submitting changes. If behavior changes
 
 ```text
 src/main.ts              Plugin entry, view rendering, commands, settings
-src/index.ts             Property index, folding, type icons
+src/index.ts             Property index and folding
 src/frontmatter-values.ts Typed value reader for frontmatter
 src/sorting.ts           Sort modes and natural ordering
 src/search.ts            Obsidian property query builder
@@ -48,8 +48,7 @@ docs/                    Publishing, QA, and release notes
 
 - **Read-only.** The plugin must never modify notes. All data comes from Obsidian's metadata cache.
 - **Never interpret note content as HTML.** Use `textContent` and the `el()` helper rather than `innerHTML`.
-- **Do not infer property types.** Use the type configured in Obsidian and fall back to `text`.
-- **Guard host internals.** APIs such as `metadataTypeManager` and the Search view's `setQuery` are not part of the public typings; feature-detect and wrap them in `try/catch`.
+- **Guard host internals.** APIs such as the Search view's `setQuery` are not part of the public typings; feature-detect and wrap them in `try/catch`.
 - **Keep identity stable.** Property keys are trimmed, NFC-normalized, and case-folded. Value identity combines the value kind and folded text so types and complete wiki links stay distinct.
 - **Count notes, not assignments.** A note contributes at most one count per row.
 - **Serialize settings writes.** Use the plugin's `save()` method instead of calling `saveData` directly.

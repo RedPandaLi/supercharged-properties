@@ -45,7 +45,6 @@ Run this checklist against a build candidate before publishing. Automated checks
 - [ ] Deleting a note removes its contributions.
 - [ ] Renaming a note moves its contributions to the new path.
 - [ ] Renaming a folder rebuilds the index.
-- [ ] Changing a property type updates its icon.
 - [ ] Rapid edits do not leave stale values or duplicate counts.
 
 ## Search
@@ -81,13 +80,6 @@ Run this checklist against a build candidate before publishing. Automated checks
 - [ ] Unpinning restores the normal order.
 - [ ] Hiding removes a property from the tree and the settings entry restores it.
 - [ ] Hidden properties are excluded from profile and selection counts.
-
-## Type icons
-
-- [ ] Icons match Obsidian's configured types: text, list, tags, number, checkbox, date, and datetime.
-- [ ] Unconfigured properties fall back to the text icon.
-- [ ] List values and date-shaped strings are not guessed when no type is configured.
-- [ ] Missing or degraded `metadataTypeManager` APIs do not break rendering.
 
 ## Row interactions
 

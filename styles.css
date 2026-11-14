@@ -16,7 +16,6 @@
 .pv-view button.pv-node { flex:1; min-width:0; height:auto; min-height:28px; display:flex; align-items:center; justify-content:flex-start; gap:6px; padding:3px 6px; background:transparent; border:0; box-shadow:none; color:var(--text-normal); text-align:start; }
 .pv-property-row .pv-node { font-weight:var(--nav-item-weight, 400); }
 .pv-icon { color:var(--text-muted); display:inline-flex; flex-shrink:0; }
-.pv-type-icon { width:14px; min-width:14px; color:var(--text-muted); }
 .pv-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; unicode-bidi:plaintext; }
 .pv-count { margin-inline-start:auto; min-width:18px; text-align:right; padding:0 2px; color:var(--text-faint); font-size:var(--font-ui-smaller, 11px); font-variant-numeric:tabular-nums; }
 .pv-values { margin-inline-start:13px; padding-inline-start:8px; border-inline-start:1px solid var(--background-modifier-border); }

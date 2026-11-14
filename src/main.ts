@@ -1,5 +1,5 @@
-import { Events, ItemView, Menu, Notice, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf, setIcon } from 'obsidian';
-import { fold, natural, PropertyIndex, PropertyNode, ValueNode, propertyType, typeIcons } from './index';
+import { ItemView, Menu, Notice, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf, setIcon } from 'obsidian';
+import { fold, natural, PropertyIndex, PropertyNode, ValueNode } from './index';
 
 import { SortOrder, sortOptions, sortOrder, sortNodes } from './sorting';
 import { propertyQuery } from './search';
@@ -48,10 +48,6 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
         if (cache) { this.index.update(file.path, cache.frontmatter); this.refresh(); }
       }
     }));
-    const typeManager = (this.app as unknown as { metadataTypeManager?: Events }).metadataTypeManager;
-    if (typeManager && typeof typeManager.on === 'function') {
-      this.registerEvent(typeManager.on('changed', () => this.refresh()));
-    }
     this.registerEvent(this.app.vault.on('delete', file => {
       if (file instanceof TFile) { this.index.remove(file.path); this.refresh(); }
       else this.scheduleRebuild();
@@ -355,12 +351,6 @@ export class PropertiesView extends ItemView {
     if (!properties.length) el(this.scopeChoices, 'p', 'pv-hint', 'No matching properties.');
     this.scopeChoices.scrollTop = scroll;
   }
-  private kind(property: PropertyNode): string {
-    const manager = (this.app as unknown as { metadataTypeManager?: { getAllProperties?: () => Record<string, { type?: string; widget?: string }> } }).metadataTypeManager;
-    let configured: string | undefined;
-    try { const info = manager?.getAllProperties?.()?.[property.id]; configured = info?.type ?? info?.widget; } catch { /* Use the text default when the host cannot supply a type. */ }
-    return propertyType(configured);
-  }
   private matches(text: string, scope: string): boolean {
     return (this.searchScope === 'any' || this.searchScope === scope) && fold(text).includes(this.query);
   }
@@ -443,10 +433,6 @@ export class PropertiesView extends ItemView {
         this.showMenu(new MouseEvent('contextmenu', { clientX: rect.left, clientY: rect.bottom }), property, node);
       }
     });
-    if (isKey) {
-      const kind = this.kind(property); const icon = el(button, 'span', 'pv-icon pv-type-icon');
-      icon.title = kind; icon.setAttribute('aria-label', `Type: ${kind}`); setIcon(icon, typeIcons[kind]);
-    }
     el(button, 'span', 'pv-label', node.label);
     if (isKey && this.plugin.prefs.pinned.includes(property.id)) setIcon(el(button, 'span', 'pv-pin'), 'pin');
     if (!isKey) { const kind = (JSON.parse(node.id) as string[])[0]; if (kind !== 'string') el(button, 'span', 'pv-kind', kind); }

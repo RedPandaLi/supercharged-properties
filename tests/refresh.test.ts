@@ -25,18 +25,17 @@ function emitter() {
 }
 async function setup(saved: unknown = null) {
   vi.useFakeTimers();
-  const cache = emitter(); const vault = emitter(); const types = emitter();
+  const cache = emitter(); const vault = emitter();
   const plugin = new Plugin({} as any, {} as any);
   const files: any[] = []; const metadata = new Map<string, any>();
   (plugin as any).app = {
     metadataCache: { ...cache, getFileCache: (file: any) => metadata.get(file.path) },
     vault: { ...vault, getMarkdownFiles: () => files },
-    metadataTypeManager: types,
     workspace: { onLayoutReady: (run: () => void) => run(), getLeavesOfType: () => [] }
   };
   (plugin as any).loadData = async () => saved;
   await plugin.onload(); vi.runAllTimers();
-  return { plugin, cache, vault, types, files, metadata };
+  return { plugin, cache, vault, files, metadata };
 }
 afterEach(() => { vi.useRealTimers(); });
 it('indexes new notes when metadata is ready, updates edits, and removes deleted notes', async () => {
@@ -49,20 +48,19 @@ it('indexes new notes when metadata is ready, updates edits, and removes deleted
   expect(plugin.index.properties.has('status')).toBe(false);
   vault.emit('delete', file); expect(plugin.index.properties.size).toBe(0);
 });
-it('refreshes type changes and coalesces metadata/folder rebuild events', async () => {
-  const { plugin, cache, vault, types } = await setup();
-  const refresh = vi.spyOn(plugin, 'refresh'); const rebuild = vi.spyOn(plugin, 'rebuild');
-  types.emit('changed'); expect(refresh).toHaveBeenCalledOnce();
+it('coalesces metadata and folder rebuild events', async () => {
+  const { plugin, cache, vault } = await setup();
+  const rebuild = vi.spyOn(plugin, 'rebuild');
   cache.emit('resolved'); cache.emit('resolved'); vault.emit('rename', {}, 'Folder');
   expect(rebuild).not.toHaveBeenCalled(); vi.advanceTimersByTime(150);
   expect(rebuild).toHaveBeenCalledOnce();
 });
 it('cancels queued work and unregisters events on unload', async () => {
-  const { plugin, cache, types } = await setup();
+  const { plugin, cache } = await setup();
   const rebuild = vi.spyOn(plugin, 'rebuild'); const refresh = vi.spyOn(plugin, 'refresh');
   cache.emit('resolved');
   for (const cleanup of (plugin as any).cleanups) cleanup();
-  vi.runAllTimers(); types.emit('changed');
+  vi.runAllTimers();
   expect(rebuild).not.toHaveBeenCalled(); expect(refresh).not.toHaveBeenCalled();
 });
 

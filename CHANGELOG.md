@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-14
+
+### Removed
+
+- Property type icons and the private `metadataTypeManager` integration. Property rows no longer display type icons, and the plugin no longer reads undocumented Obsidian APIs. Value kinds remain visible for non-string values.
+
+### Changed
+
+- Plugin description updated to remove the type-icon claim.
+
 ## [1.0.0] - 2026-11-14
 
 Initial public release.
@@ -36,5 +46,6 @@ Initial public release.
 
 - Released under the MIT License. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 
-[Unreleased]: https://github.com/ajay126z/supercharged-properties/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/ajay126z/supercharged-properties/compare/1.0.1...HEAD
+[1.0.1]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.1
 [1.0.0]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.0

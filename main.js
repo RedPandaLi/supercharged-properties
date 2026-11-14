@@ -151,19 +151,6 @@ var PropertyIndex = class {
     this.memberships.set(path, membership);
   }
 };
-var typeIcons = {
-  text: "text",
-  multitext: "list",
-  aliases: "list",
-  tags: "tags",
-  number: "hash",
-  checkbox: "check-square",
-  date: "calendar",
-  datetime: "calendar-clock"
-};
-function propertyType(configured) {
-  return configured && Object.prototype.hasOwnProperty.call(typeIcons, configured) ? configured : "text";
-}
 
 // src/sorting.ts
 var sortOptions = {
@@ -262,10 +249,6 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian.Plugin {
         }
       }
     }));
-    const typeManager = this.app.metadataTypeManager;
-    if (typeManager && typeof typeManager.on === "function") {
-      this.registerEvent(typeManager.on("changed", () => this.refresh()));
-    }
     this.registerEvent(this.app.vault.on("delete", (file) => {
       if (file instanceof import_obsidian.TFile) {
         this.index.remove(file.path);
@@ -629,16 +612,6 @@ var PropertiesView = class extends import_obsidian.ItemView {
     if (!properties.length) el(this.scopeChoices, "p", "pv-hint", "No matching properties.");
     this.scopeChoices.scrollTop = scroll;
   }
-  kind(property) {
-    const manager = this.app.metadataTypeManager;
-    let configured;
-    try {
-      const info = manager?.getAllProperties?.()?.[property.id];
-      configured = info?.type ?? info?.widget;
-    } catch {
-    }
-    return propertyType(configured);
-  }
   matches(text, scope) {
     return (this.searchScope === "any" || this.searchScope === scope) && fold(text).includes(this.query);
   }
@@ -731,13 +704,6 @@ var PropertiesView = class extends import_obsidian.ItemView {
         this.showMenu(new MouseEvent("contextmenu", { clientX: rect.left, clientY: rect.bottom }), property, node);
       }
     });
-    if (isKey) {
-      const kind = this.kind(property);
-      const icon = el(button, "span", "pv-icon pv-type-icon");
-      icon.title = kind;
-      icon.setAttribute("aria-label", `Type: ${kind}`);
-      (0, import_obsidian.setIcon)(icon, typeIcons[kind]);
-    }
     el(button, "span", "pv-label", node.label);
     if (isKey && this.plugin.prefs.pinned.includes(property.id)) (0, import_obsidian.setIcon)(el(button, "span", "pv-pin"), "pin");
     if (!isKey) {

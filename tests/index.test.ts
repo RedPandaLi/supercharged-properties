@@ -49,13 +49,3 @@ describe('property membership', () => {
     expect(index.properties.size).toBe(3);
   });
 });
-
-it('uses configured Obsidian types with a text fallback', async () => {
-  const { propertyType } = await import('../src/index');
-  expect(propertyType('date')).toBe('date');
-  expect(propertyType('multitext')).toBe('multitext');
-  expect(propertyType()).toBe('text');
-  expect(propertyType('mixed')).toBe('text');
-  expect(propertyType('list')).toBe('text');
-  expect(propertyType('constructor')).toBe('text');
-});

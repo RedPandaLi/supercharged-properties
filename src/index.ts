@@ -57,11 +57,3 @@ export class PropertyIndex {
   }
 }
 
-/** Only built-in Obsidian property types; never infer a type from note contents. */
-export const typeIcons: Record<string, string> = {
-  text: 'text', multitext: 'list', aliases: 'list', tags: 'tags',
-  number: 'hash', checkbox: 'check-square', date: 'calendar', datetime: 'calendar-clock'
-};
-export function propertyType(configured?: string): string {
-  return configured && Object.prototype.hasOwnProperty.call(typeIcons, configured) ? configured : 'text';
-}

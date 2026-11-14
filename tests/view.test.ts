@@ -56,15 +56,6 @@ it('filters notes by path and automatically reveals the matching branch', () => 
   expect(document.querySelector('.pv-tree')!.textContent).not.toContain('Pending');
   expect(document.querySelectorAll('.pv-file').length).toBeGreaterThan(0);
 });
-it('shows list and date icons before names and respects configured types', () => {
-  plugin.index.update('Three.md', { items: ['a'], due: '2026-11-13', title: '2026-11-13' });
-  (view as any).app.metadataTypeManager = { getAllProperties: () => ({ title: { type: 'text' }, items: { type: 'multitext' }, due: { type: 'date' } }) };
-  view.render();
-  const icon = (key: string) => document.querySelector(`[aria-label="Toggle ${key} (1)"] .pv-type-icon`) as HTMLElement;
-  expect(icon('items').dataset.icon).toBe('list'); expect(icon('due').dataset.icon).toBe('calendar');
-  expect(icon('title').dataset.icon).toBe('text');
-  expect(icon('due').nextElementSibling!.textContent).toBe('due');
-});
 it('updates the expanded note branch after edits/deletion', () => {
   click('Expand status'); click('Show notes with status: Pending (1)');
   plugin.index.remove('Two.md'); view.render();
@@ -117,11 +108,6 @@ it('renders the layout fixture when requested', async () => {
   ${readFileSync('styles.css', 'utf8')}</style></head><body>${view.contentEl.outerHTML}</body></html>`);
 });
 
-it('defaults to text icons without inferring arrays or date-shaped strings', () => {
-  plugin.index.update('Three.md', { items: ['a'], due: '2026-11-13' }); view.render();
-  expect(document.querySelector('[aria-label="Toggle due (1)"] .pv-type-icon')!.getAttribute('data-icon')).toBe('text');
-  expect(document.querySelector('[aria-label="Toggle items (1)"] .pv-type-icon')!.getAttribute('data-icon')).toBe('text');
-});
 it('puts value expanders first and renders compact inline note names and folders', () => {
   click('Expand status');
   const toggle = document.querySelector('[aria-label="Expand notes for status: Done"]') as HTMLElement;

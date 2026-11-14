@@ -50,8 +50,7 @@ Supporting modules:
 - Property keys are normalized with `fold` (trim, NFC, lowercase). Value identity is `JSON.stringify([kind, foldedText])` so types and complete wiki links stay distinct.
 - Counts are distinct notes, not value assignments. One note contributes at most one count per row.
 - Prefer `textContent` and `el()` helpers. Never inject note content as HTML.
-- Host APIs that are not in the public typings (`metadataTypeManager`, Search `setQuery`) must be feature-detected and guarded with `try/catch`.
-- Never infer property types from note contents; use configured types with a `text` fallback (`propertyType`).
+- Host APIs that are not in the public typings (for example the Search `setQuery`) must be feature-detected and guarded with `try/catch`.
 - Settings writes are snapshotted and serialized through `saveQueue`; do not call `saveData` directly elsewhere.
 - Keep code under `src/` strict TypeScript, no runtime dependencies beyond `obsidian`. The release validator asserts the production bundle imports only `obsidian`.
 - Use SPDX-style comments in new source files where the surrounding file already does; `src/frontmatter-values.ts` carries the MIT header.
