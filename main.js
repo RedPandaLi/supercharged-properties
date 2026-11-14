@@ -25,7 +25,7 @@ __export(main_exports, {
   default: () => SuperchargedPropertiesPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian = require("obsidian");
+var import_obsidian2 = require("obsidian");
 
 // src/frontmatter-values.ts
 var EMPTY = Object.freeze({ kind: "empty", text: "" });
@@ -199,10 +199,65 @@ function sameKeys(a, b) {
   return left.size === right.size && [...left].every((key) => right.has(key));
 }
 
+// src/property-types.ts
+var import_obsidian = require("obsidian");
+var TYPE_ICONS = /* @__PURE__ */ new Map([
+  ["text", "text"],
+  ["multitext", "list"],
+  ["aliases", "list"],
+  ["tags", "tags"],
+  ["number", "hash"],
+  ["checkbox", "check-square"],
+  ["date", "calendar"],
+  ["datetime", "calendar-clock"]
+]);
+var BUILTIN_TYPES = /* @__PURE__ */ new Map([
+  ["tags", "tags"],
+  ["aliases", "aliases"],
+  ["cssclasses", "multitext"]
+]);
+var PropertyTypeResolver = class {
+  constructor(app) {
+    this.app = app;
+    this.types = /* @__PURE__ */ new Map();
+  }
+  /** Reload types.json. Missing, malformed, or unreadable files keep the built-in fallbacks. */
+  async load() {
+    let raw;
+    try {
+      const path = (0, import_obsidian.normalizePath)(`${this.app.vault.configDir}/types.json`);
+      if (!await this.app.vault.adapter.exists(path)) {
+        this.types.clear();
+        return;
+      }
+      const parsed = JSON.parse(await this.app.vault.adapter.read(path));
+      raw = parsed?.types;
+    } catch {
+      return;
+    }
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return;
+    const types = /* @__PURE__ */ new Map();
+    for (const [key, value] of Object.entries(raw)) {
+      if (typeof value !== "string") continue;
+      const normalizedKey = fold(key);
+      const normalizedType = fold(value);
+      if (normalizedKey && normalizedType) types.set(normalizedKey, normalizedType);
+    }
+    this.types = types;
+  }
+  typeFor(property) {
+    const id = fold(property.id);
+    return this.types.get(id) ?? BUILTIN_TYPES.get(id) ?? "text";
+  }
+  iconFor(property) {
+    return TYPE_ICONS.get(this.typeFor(property)) ?? "text";
+  }
+};
+
 // src/main.ts
 var VIEW = "supercharged-properties";
 var defaults = { counts: true, sort: "name", hidden: "", expanded: [], pinned: [], scope: null, profiles: [], activeProfile: null };
-var SuperchargedPropertiesPlugin = class extends import_obsidian.Plugin {
+var SuperchargedPropertiesPlugin = class extends import_obsidian2.Plugin {
   constructor() {
     super(...arguments);
     this.index = new PropertyIndex();
@@ -223,6 +278,8 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian.Plugin {
       hidden: typeof saved?.hidden === "string" ? saved.hidden : "",
       expanded: Array.isArray(saved?.expanded) ? saved.expanded.filter((v) => typeof v === "string") : []
     };
+    this.typeResolver = new PropertyTypeResolver(this.app);
+    await this.typeResolver.load();
     this.registerView(VIEW, (leaf) => new PropertiesView(leaf, this));
     this.addRibbonIcon("list-tree", "Open Supercharged Properties", () => {
       void this.open();
@@ -241,7 +298,7 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian.Plugin {
     }));
     this.registerEvent(this.app.metadataCache.on("resolved", () => this.scheduleRebuild()));
     this.registerEvent(this.app.vault.on("create", (file) => {
-      if (file instanceof import_obsidian.TFile && file.extension === "md") {
+      if (file instanceof import_obsidian2.TFile && file.extension === "md") {
         const cache = this.app.metadataCache.getFileCache(file);
         if (cache) {
           this.index.update(file.path, cache.frontmatter);
@@ -250,13 +307,13 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian.Plugin {
       }
     }));
     this.registerEvent(this.app.vault.on("delete", (file) => {
-      if (file instanceof import_obsidian.TFile) {
+      if (file instanceof import_obsidian2.TFile) {
         this.index.remove(file.path);
         this.refresh();
       } else this.scheduleRebuild();
     }));
     this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
-      if (file instanceof import_obsidian.TFile) {
+      if (file instanceof import_obsidian2.TFile) {
         this.index.remove(oldPath);
         if (file.extension === "md") this.index.update(file.path, this.app.metadataCache.getFileCache(file)?.frontmatter);
         this.refresh();
@@ -278,6 +335,10 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian.Plugin {
     for (const file of this.app.vault.getMarkdownFiles()) {
       this.index.update(file.path, this.app.metadataCache.getFileCache(file)?.frontmatter);
     }
+    void this.reloadTypes();
+  }
+  async reloadTypes() {
+    await this.typeResolver.load();
     this.refresh();
   }
   refresh() {
@@ -291,7 +352,7 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian.Plugin {
   save() {
     const snapshot = JSON.parse(JSON.stringify(this.prefs));
     this.saveQueue = this.saveQueue.then(() => this.saveData(snapshot)).catch(() => {
-      new import_obsidian.Notice("Could not save Supercharged Properties settings. Check vault permissions and available storage.");
+      new import_obsidian2.Notice("Could not save Supercharged Properties settings. Check vault permissions and available storage.");
     });
     this.refresh();
     return this.saveQueue;
@@ -317,7 +378,7 @@ function el(parent, tag, cls = "", text = "") {
   parent.appendChild(node);
   return node;
 }
-var PropertiesView = class extends import_obsidian.ItemView {
+var PropertiesView = class extends import_obsidian2.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -345,7 +406,7 @@ var PropertiesView = class extends import_obsidian.ItemView {
     this.searchHeader = el(toolbar, "div", "pv-search-header");
     this.searchHeader.hidden = true;
     const search = el(this.searchHeader, "div", "pv-search");
-    (0, import_obsidian.setIcon)(el(search, "span", "pv-icon"), "search");
+    (0, import_obsidian2.setIcon)(el(search, "span", "pv-icon"), "search");
     this.input = el(search, "input", "pv-filter");
     this.input.type = "search";
     this.input.placeholder = "Find properties, values, notes\u2026";
@@ -434,7 +495,7 @@ var PropertiesView = class extends import_obsidian.ItemView {
     }
   }
   openSearchScopeMenu() {
-    const menu = new import_obsidian.Menu();
+    const menu = new import_obsidian2.Menu();
     for (const [value, label] of [["any", "Search everything"], ["key", "Property names"], ["value", "Values"], ["note", "Note names / paths"]]) {
       menu.addItem((item) => item.setTitle(label).setChecked(this.searchScope === value).onClick(() => {
         this.searchScope = value;
@@ -459,11 +520,11 @@ var PropertiesView = class extends import_obsidian.ItemView {
   iconButton(parent, title, icon, run) {
     const button = this.button(parent, "", title, run);
     button.className = "pv-icon-button";
-    (0, import_obsidian.setIcon)(button, icon);
+    (0, import_obsidian2.setIcon)(button, icon);
     return button;
   }
   openSortMenu() {
-    const menu = new import_obsidian.Menu();
+    const menu = new import_obsidian2.Menu();
     for (const [value, label] of Object.entries(sortOptions)) {
       menu.addItem((item) => item.setTitle(label).setChecked(this.plugin.prefs.sort === value).onClick(() => {
         this.plugin.prefs.sort = sortOrder(value);
@@ -502,7 +563,7 @@ var PropertiesView = class extends import_obsidian.ItemView {
       this.render();
     });
     const search = el(this.scopePanel, "div", "pv-search pv-picker-search");
-    (0, import_obsidian.setIcon)(el(search, "span", "pv-icon"), "search");
+    (0, import_obsidian2.setIcon)(el(search, "span", "pv-icon"), "search");
     const input = el(search, "input", "pv-filter");
     input.type = "search";
     input.placeholder = "Find a property\u2026";
@@ -554,12 +615,12 @@ var PropertiesView = class extends import_obsidian.ItemView {
     const name = this.profileName.value.trim();
     if (action === "new" || action === "rename") {
       if (!name) {
-        new import_obsidian.Notice("Enter a name for this view.");
+        new import_obsidian2.Notice("Enter a name for this view.");
         this.profileName.focus();
         return;
       }
       if (prefs.profiles.some((profile) => fold(profile.name) === fold(name) && (action === "new" || profile !== active))) {
-        new import_obsidian.Notice("A view with that name already exists.");
+        new import_obsidian2.Notice("A view with that name already exists.");
         return;
       }
     }
@@ -682,7 +743,7 @@ var PropertiesView = class extends import_obsidian.ItemView {
     this.expandToggle.setAttribute("aria-label", toggleLabel);
     this.expandToggle.setAttribute("aria-pressed", String(this.allExpanded));
     this.expandToggle.disabled = this.visibleKeys.length === 0;
-    (0, import_obsidian.setIcon)(this.expandToggle, this.allExpanded ? "fold-vertical" : "list-tree");
+    (0, import_obsidian2.setIcon)(this.expandToggle, this.allExpanded ? "fold-vertical" : "list-tree");
     this.summary.textContent = `${visible} properties \xB7 ${scope === null ? "Entire vault" : "Custom selection"}`;
     if (!visible) el(this.body, "div", "pv-empty", scope?.length === 0 ? "Choose properties above to start exploring." : "No matching properties. Adjust your search or selection.");
     this.body.scrollTop = scroll;
@@ -704,8 +765,15 @@ var PropertiesView = class extends import_obsidian.ItemView {
         this.showMenu(new MouseEvent("contextmenu", { clientX: rect.left, clientY: rect.bottom }), property, node);
       }
     });
+    if (isKey) {
+      const type = this.plugin.typeResolver.typeFor(property);
+      const icon = el(button, "span", "pv-icon pv-type-icon");
+      icon.title = `Type: ${type}`;
+      icon.setAttribute("aria-hidden", "true");
+      (0, import_obsidian2.setIcon)(icon, this.plugin.typeResolver.iconFor(property));
+    }
     el(button, "span", "pv-label", node.label);
-    if (isKey && this.plugin.prefs.pinned.includes(property.id)) (0, import_obsidian.setIcon)(el(button, "span", "pv-pin"), "pin");
+    if (isKey && this.plugin.prefs.pinned.includes(property.id)) (0, import_obsidian2.setIcon)(el(button, "span", "pv-pin"), "pin");
     if (!isKey) {
       const kind = JSON.parse(node.id)[0];
       if (kind !== "string") el(button, "span", "pv-kind", kind);
@@ -722,13 +790,13 @@ var PropertiesView = class extends import_obsidian.ItemView {
       const button = this.button(notes, "", path, () => {
       });
       button.className = "pv-file";
-      (0, import_obsidian.setIcon)(el(button, "span", "pv-icon"), "file-text");
+      (0, import_obsidian2.setIcon)(el(button, "span", "pv-icon"), "file-text");
       el(button, "span", "pv-note-name", path.split("/").pop()?.replace(/\.md$/, "") ?? path);
       const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
       if (folder) el(button, "small", "pv-note-path", folder);
       button.addEventListener("click", (event) => {
         const file = this.app.vault.getAbstractFileByPath(path);
-        if (file instanceof import_obsidian.TFile) void this.app.workspace.getLeaf(event.ctrlKey || event.metaKey).openFile(file).catch(() => new import_obsidian.Notice("Unable to open note."));
+        if (file instanceof import_obsidian2.TFile) void this.app.workspace.getLeaf(event.ctrlKey || event.metaKey).openFile(file).catch(() => new import_obsidian2.Notice("Unable to open note."));
       });
     }
     if (paths.length > limit) this.button(notes, "Show more notes", "Show 100 more notes", () => {
@@ -744,9 +812,9 @@ var PropertiesView = class extends import_obsidian.ItemView {
   async copy(text) {
     try {
       await this.contentEl.ownerDocument.defaultView.navigator.clipboard.writeText(text);
-      new import_obsidian.Notice("Copied to clipboard.");
+      new import_obsidian2.Notice("Copied to clipboard.");
     } catch {
-      new import_obsidian.Notice("Clipboard unavailable.");
+      new import_obsidian2.Notice("Clipboard unavailable.");
     }
   }
   async search(property, node) {
@@ -764,27 +832,27 @@ var PropertiesView = class extends import_obsidian.ItemView {
       if (typeof view.setQuery !== "function") {
         created?.detach();
         created = null;
-        new import_obsidian.Notice("Enable the Search core plugin to use Open in Search.");
+        new import_obsidian2.Notice("Enable the Search core plugin to use Open in Search.");
         return;
       }
       view.setQuery(query);
       created = null;
       await this.app.workspace.revealLeaf(leaf);
       if (node !== property && JSON.parse(node.id)[0] === "empty") {
-        new import_obsidian.Notice("Search matches null properties; the local empty row also includes blank strings and empty lists.");
+        new import_obsidian2.Notice("Search matches null properties; the local empty row also includes blank strings and empty lists.");
       }
     } catch {
       if (created) {
         created.detach();
         created = null;
-        new import_obsidian.Notice("Enable the Search core plugin to use Open in Search.");
+        new import_obsidian2.Notice("Enable the Search core plugin to use Open in Search.");
         return;
       }
-      new import_obsidian.Notice("Could not open Search. Your notes remain available in the property tree.");
+      new import_obsidian2.Notice("Could not open Search. Your notes remain available in the property tree.");
     }
   }
   showMenu(event, property, node) {
-    const menu = new import_obsidian.Menu();
+    const menu = new import_obsidian2.Menu();
     menu.addItem((item) => item.setTitle("Open in Search").setIcon("search").onClick(() => {
       void this.search(property, node);
     }));
@@ -806,13 +874,13 @@ var PropertiesView = class extends import_obsidian.ItemView {
 ${property.label}`;
         void this.plugin.save();
         this.render();
-        new import_obsidian.Notice("Property hidden. Restore it in Supercharged Properties settings.");
+        new import_obsidian2.Notice("Property hidden. Restore it in Supercharged Properties settings.");
       }));
     }
     menu.showAtMouseEvent(event);
   }
 };
-var PreferencesTab = class extends import_obsidian.PluginSettingTab {
+var PreferencesTab = class extends import_obsidian2.PluginSettingTab {
   constructor(plugin) {
     super(plugin.app, plugin);
     this.plugin = plugin;
@@ -842,7 +910,7 @@ var PreferencesTab = class extends import_obsidian.PluginSettingTab {
   display() {
     this.containerEl.replaceChildren();
     for (const definition of this.getSettingDefinitions()) {
-      const setting = new import_obsidian.Setting(this.containerEl).setName(definition.name);
+      const setting = new import_obsidian2.Setting(this.containerEl).setName(definition.name);
       if (definition.desc) setting.setDesc(definition.desc);
       definition.render(setting);
     }

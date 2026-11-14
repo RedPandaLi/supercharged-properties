@@ -15,6 +15,7 @@ vi.mock('obsidian', () => ({
   Plugin: class {}, PluginSettingTab: class {}, Setting: class {},
   TFile: class {},
   Notice: class { static messages: string[] = []; constructor(message: string) { (this.constructor as any).messages.push(message); } },
+  normalizePath: (path: string) => path.replaceAll('\\', '/'),
   setIcon: (element: HTMLElement, icon: string) => element.dataset.icon = icon
 }));
 import { PropertiesView } from '../src/main';
@@ -29,7 +30,15 @@ beforeEach(async () => {
   const index = new PropertyIndex();
   index.update('Projects/One.md', { status: 'Done', tags: ['work', 'personal'] });
   index.update('Two.md', { status: 'Pending' });
-  plugin = { index, prefs: { counts: true, sort: 'name', hidden: '', expanded: [], pinned: [], scope: null, profiles: [], activeProfile: null }, refresh: vi.fn(), rebuild: vi.fn(), save: vi.fn() };
+  plugin = {
+    index,
+    prefs: { counts: true, sort: 'name', hidden: '', expanded: [], pinned: [], scope: null, profiles: [], activeProfile: null },
+    typeResolver: {
+      typeFor: (property: { id: string }) => property.id === 'tags' ? 'tags' : 'text',
+      iconFor: (property: { id: string }) => property.id === 'tags' ? 'tags' : 'text'
+    },
+    refresh: vi.fn(), rebuild: vi.fn(), save: vi.fn()
+  };
   openFile = vi.fn().mockResolvedValue(undefined);
   const app = { vault: { getAbstractFileByPath: () => new TFile() }, workspace: { getLeaf: () => ({ openFile }) } };
   view = new PropertiesView({ app } as any, plugin);
@@ -42,6 +51,18 @@ it('uses a single property tree and expands notes inline', () => {
   click('Expand status'); click('Show notes with status: Done (1)');
   expect(document.querySelector('.pv-values .pv-notes .pv-file')!.textContent).toContain('One');
   (document.querySelector('.pv-file') as HTMLElement).click(); expect(openFile).toHaveBeenCalledOnce();
+});
+it('shows a type icon before each property label but not value rows', () => {
+  const tags = document.querySelector('[aria-label="Toggle tags (1)"]') as HTMLElement;
+  const icon = tags.querySelector('.pv-type-icon') as HTMLElement;
+  expect(tags.firstElementChild).toBe(icon);
+  expect(icon.dataset.icon).toBe('tags');
+  expect(icon.title).toBe('Type: tags');
+  expect(icon.getAttribute('aria-hidden')).toBe('true');
+  const status = document.querySelector('[aria-label="Toggle status (2)"]') as HTMLElement;
+  expect((status.querySelector('.pv-type-icon') as HTMLElement).dataset.icon).toBe('text');
+  click('Expand status');
+  expect(document.querySelectorAll('.pv-value-group .pv-type-icon')).toHaveLength(0);
 });
 it('scopes the browser to selected properties, including none and all', () => {
   click('Choose properties to show'); click('Clear property selection');
@@ -113,7 +134,7 @@ it('renders the layout fixture when requested', async () => {
   click('Show notes with status: In progress (2)');
   // Standalone host fixture for CSS QA; actual Obsidian supplies Lucide SVG icons.
   for (const icon of document.querySelectorAll<HTMLElement>('[data-icon]')) {
-    icon.textContent = ({ 'chevron-down': '⌄', 'chevron-right': '›', 'calendar': '▦', 'list': '☷', 'search': '⌕', 'text': 'T', 'hash': '#', 'check-square': '☑', 'file-text': '▤', 'refresh-cw': '↻', 'list-tree': '☷', 'fold-vertical': '↥' } as Record<string, string>)[icon.dataset.icon!] ?? '◇';
+    icon.textContent = ({ 'chevron-down': '⌄', 'chevron-right': '›', 'calendar': '▦', 'calendar-clock': '◷', 'list': '☷', 'tags': '⌗', 'search': '⌕', 'text': 'T', 'hash': '#', 'check-square': '☑', 'file-text': '▤', 'refresh-cw': '↻', 'list-tree': '☷', 'fold-vertical': '↥' } as Record<string, string>)[icon.dataset.icon!] ?? '◇';
   }
   writeFileSync(process.env.PV_PREVIEW, `<!doctype html><html><head><meta charset="utf-8"><style>
   :root{--text-normal:#dadbe3;--text-muted:#9396a8;--text-faint:#707488;--text-accent:#b4a1ff;--interactive-accent:#9b85ee;--background-primary:#202128;--background-secondary:#292b34;--background-modifier-border:#363843;--background-modifier-hover:#2e303b;--background-modifier-active-hover:#343044;--font-ui-small:13px}*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:#202128;font-family:system-ui}button,input,select{font:inherit;color:inherit}button,select{border:1px solid #363843;border-radius:5px;background:#292b34;padding:4px 8px}input{color:#dadbe3}button{cursor:pointer}.pv-view{height:100vh;width:100%;max-width:480px;border-right:1px solid #363843}

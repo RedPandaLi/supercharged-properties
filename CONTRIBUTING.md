@@ -35,6 +35,7 @@ Run `npm run lint` and `npm test` before submitting changes. If behavior changes
 src/main.ts              Plugin entry, view rendering, commands, settings
 src/index.ts             Property index and folding
 src/frontmatter-values.ts Typed value reader for frontmatter
+src/property-types.ts   Public property-type icon resolver
 src/sorting.ts           Sort modes and natural ordering
 src/search.ts            Obsidian property query builder
 src/profiles.ts          Saved-view validation and comparison
@@ -49,6 +50,7 @@ docs/                    Publishing, QA, and release notes
 - **Read-only.** The plugin must never modify notes. All data comes from Obsidian's metadata cache.
 - **Never interpret note content as HTML.** Use `textContent` and the `el()` helper rather than `innerHTML`.
 - **Guard host internals.** APIs such as the Search view's `setQuery` are not part of the public typings; feature-detect and wrap them in `try/catch`.
+- **Use public property-type data.** Resolve type icons from `types.json`, built-in property names, or the text fallback. Do not use `metadataTypeManager` or other private type registries.
 - **Keep identity stable.** Property keys are trimmed, NFC-normalized, and case-folded. Value identity combines the value kind and folded text so types and complete wiki links stay distinct.
 - **Count notes, not assignments.** A note contributes at most one count per row.
 - **Serialize settings writes.** Use the plugin's `save()` method instead of calling `saveData` directly.
@@ -59,7 +61,7 @@ docs/                    Publishing, QA, and release notes
 
 Tests use Vitest. `tests/obsidian-stub.ts` resolves the `obsidian` module during test startup, and individual suites provide doubles with `vi.mock('obsidian')`. DOM tests opt into jsdom with `// @vitest-environment jsdom`.
 
-- Add pure-logic tests for index, value parsing, sorting, search, and profiles changes.
+- Add pure-logic tests for index, value parsing, sorting, search, profiles, and property types.
 - Add lifecycle tests for event handling, rebuild debouncing, persistence, and cleanup.
 - Add view tests for interaction changes. Tests select controls by accessible labels, menu titles, and CSS classes, so update them when those change.
 - To generate a standalone CSS fixture, set `PV_PREVIEW=/path/to/out.html` when running the view tests.

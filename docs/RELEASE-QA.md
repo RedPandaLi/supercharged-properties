@@ -37,6 +37,15 @@ Run this checklist against a build candidate before publishing. Automated checks
 - [ ] Unsupported object values do not crash the view; their notes remain reachable.
 - [ ] The Obsidian cache `position` field is not shown as a property.
 
+## Property type icons
+
+- [ ] Configured types show matching icons: text, list, tags, number, checkbox, date, and date & time.
+- [ ] Properties without a configured type fall back to text.
+- [ ] `tags`, `aliases`, and `cssclasses` use built-in types.
+- [ ] Changing a property type and refreshing the index updates its icon.
+- [ ] A missing or malformed `.obsidian/types.json` leaves the text fallback without errors.
+- [ ] Type icons appear only on property rows, not value rows.
+
 ## Live updates
 
 - [ ] Editing frontmatter updates values and counts.

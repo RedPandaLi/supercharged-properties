@@ -8,7 +8,8 @@ vi.mock('obsidian', () => ({
     registerEvent(ref: { off: () => void }) { this.cleanups.push(ref.off); }
     register(fn: () => void) { this.cleanups.push(fn); }
   },
-  ItemView: class {}, PluginSettingTab: class {}, Setting: class {}, Menu: class {}, Notice: class {}, TFile: class {}, setIcon() {}
+  ItemView: class {}, PluginSettingTab: class {}, Setting: class {}, Menu: class {}, Notice: class {}, TFile: class {}, setIcon() {},
+  normalizePath: (path: string) => path.replaceAll('\\', '/')
 }));
 import Plugin from '../src/main';
 import { TFile } from 'obsidian';
@@ -23,19 +24,29 @@ function emitter() {
     emit(event: string, ...args: any[]) { for (const callback of listeners.get(event) ?? []) callback(...args); }
   };
 }
-async function setup(saved: unknown = null) {
+async function setup(saved: unknown = null, types?: string) {
   vi.useFakeTimers();
   const cache = emitter(); const vault = emitter();
   const plugin = new Plugin({} as any, {} as any);
   const files: any[] = []; const metadata = new Map<string, any>();
+  const disk = new Map<string, string>();
+  if (types !== undefined) disk.set('.obsidian/types.json', types);
   (plugin as any).app = {
     metadataCache: { ...cache, getFileCache: (file: any) => metadata.get(file.path) },
-    vault: { ...vault, getMarkdownFiles: () => files },
+    vault: {
+      ...vault,
+      configDir: '.obsidian',
+      adapter: {
+        exists: async (path: string) => disk.has(path),
+        read: async (path: string) => disk.get(path) ?? ''
+      },
+      getMarkdownFiles: () => files
+    },
     workspace: { onLayoutReady: (run: () => void) => run(), getLeavesOfType: () => [] }
   };
   (plugin as any).loadData = async () => saved;
   await plugin.onload(); vi.runAllTimers();
-  return { plugin, cache, vault, files, metadata };
+  return { plugin, cache, vault, files, metadata, disk };
 }
 afterEach(() => { vi.useRealTimers(); });
 it('indexes new notes when metadata is ready, updates edits, and removes deleted notes', async () => {
@@ -62,6 +73,12 @@ it('cancels queued work and unregisters events on unload', async () => {
   for (const cleanup of (plugin as any).cleanups) cleanup();
   vi.runAllTimers();
   expect(rebuild).not.toHaveBeenCalled(); expect(refresh).not.toHaveBeenCalled();
+});
+it('loads configured property types during startup', async () => {
+  const { plugin } = await setup(null, JSON.stringify({ types: { rating: 'number', due: 'date' } }));
+  expect(plugin.typeResolver.typeFor({ id: 'rating' })).toBe('number');
+  expect(plugin.typeResolver.iconFor({ id: 'rating' })).toBe('hash');
+  expect(plugin.typeResolver.iconFor({ id: 'due' })).toBe('calendar');
 });
 
 it('restores profiles and the active selection when the plugin loads', async () => {

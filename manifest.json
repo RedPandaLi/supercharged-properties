@@ -1,9 +1,9 @@
 {
   "id": "supercharged-properties",
   "name": "Supercharged Properties",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minAppVersion": "1.7.2",
-  "description": "Explore selected vault properties, values, and notes in a full-pane tree.",
+  "description": "Explore vault properties, values, and notes in a full-pane tree with property type icons.",
   "author": "Ajay Zapadiya",
   "isDesktopOnly": false,
   "authorUrl": "https://github.com/ajay126z"

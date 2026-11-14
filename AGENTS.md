@@ -22,7 +22,7 @@ export PATH="$HOME/.nvm/versions/node/v24.22.2/bin:$PATH"
 ```sh
 npm run lint       # ESLint with eslint-plugin-obsidianmd, zero warnings allowed
 npm run build      # tsc --noEmit, then esbuild -> main.js
-npm test           # Vitest, 7 files / 51 tests
+npm test           # Vitest, 8 files / 57 tests
 npm run validate   # lint + build + test + release validation
 npm run release:prepare  # validate, then stage dist/<version>/ assets
 ```
@@ -43,6 +43,7 @@ Supporting modules:
 - `src/sorting.ts` - sort modes and natural ordering with deterministic ID tie-breaks.
 - `src/search.ts` - quotes Obsidian property queries; null/empty uses the `null` operator.
 - `src/profiles.ts` - validates and normalizes saved profiles; rejects malformed or duplicate entries.
+- `src/property-types.ts` - resolves property type icons from the vault's `types.json` through public adapter APIs, with built-in and text fallbacks.
 - `styles.css` - all view styling, using Obsidian theme variables. Keep selectors prefixed with `pv-`.
 
 ## Conventions
@@ -51,6 +52,7 @@ Supporting modules:
 - Counts are distinct notes, not value assignments. One note contributes at most one count per row.
 - Prefer `textContent` and `el()` helpers. Never inject note content as HTML.
 - Host APIs that are not in the public typings (for example the Search `setQuery`) must be feature-detected and guarded with `try/catch`.
+- Property type icons must come from public APIs (`types.json`, built-in names, or `text`). Do not use `metadataTypeManager`, `registeredTypeWidgets`, or similar private registries.
 - Settings writes are snapshotted and serialized through `saveQueue`; do not call `saveData` directly elsewhere.
 - Keep code under `src/` strict TypeScript, no runtime dependencies beyond `obsidian`. The release validator asserts the production bundle imports only `obsidian`.
 - Use SPDX-style comments in new source files where the surrounding file already does; `src/frontmatter-values.ts` carries the MIT header.
@@ -59,7 +61,7 @@ Supporting modules:
 
 Vitest uses `tests/obsidian-stub.ts` for module resolution; individual tests supply `vi.mock('obsidian')` doubles. DOM tests opt into jsdom with `// @vitest-environment jsdom`.
 
-- Pure logic: `index`, `frontmatter-values`, `sorting`, `search`, `profiles`.
+- Pure logic: `index`, `frontmatter-values`, `sorting`, `search`, `profiles`, `property-types`.
 - Host lifecycle: `refresh.test.ts` (fake timers, event emitters, save queue).
 - UI behavior: `view.test.ts` (jsdom, accessibility labels, menus, profiles, CSS fixture). Set `PV_PREVIEW=/path/out.html` to emit a standalone layout fixture for CSS QA.
 

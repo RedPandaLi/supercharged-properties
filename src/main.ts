@@ -4,6 +4,7 @@ import { fold, natural, PropertyIndex, PropertyNode, ValueNode } from './index';
 import { SortOrder, sortOptions, sortOrder, sortNodes } from './sorting';
 import { propertyQuery } from './search';
 import { loadProfiles, sameKeys, PropertyProfile } from './profiles';
+import { PropertyTypeResolver } from './property-types';
 
 const VIEW = 'supercharged-properties';
 interface Preferences { counts: boolean; sort: SortOrder; hidden: string; expanded: string[]; pinned: string[]; scope: string[] | null; profiles: PropertyProfile[]; activeProfile: string | null }
@@ -12,6 +13,7 @@ const defaults: Preferences = { counts: true, sort: 'name', hidden: '', expanded
 export default class SuperchargedPropertiesPlugin extends Plugin {
   index = new PropertyIndex();
   prefs: Preferences = { ...defaults };
+  typeResolver!: PropertyTypeResolver;
   private timer: number | undefined;
   private rebuildTimer: number | undefined;
   private saveQueue: Promise<void> = Promise.resolve();
@@ -30,6 +32,8 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
       hidden: typeof saved?.hidden === 'string' ? saved.hidden : '',
       expanded: Array.isArray(saved?.expanded) ? saved.expanded.filter((v: unknown) => typeof v === 'string') : []
     };
+    this.typeResolver = new PropertyTypeResolver(this.app);
+    await this.typeResolver.load();
     this.registerView(VIEW, leaf => new PropertiesView(leaf, this));
     this.addRibbonIcon('list-tree', 'Open Supercharged Properties', () => { void this.open(); });
     this.addCommand({ id: 'open', name: 'Open sidebar', callback: () => { void this.open(); } });
@@ -74,6 +78,11 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
     for (const file of this.app.vault.getMarkdownFiles()) {
       this.index.update(file.path, this.app.metadataCache.getFileCache(file)?.frontmatter);
     }
+    void this.reloadTypes();
+  }
+
+  async reloadTypes(): Promise<void> {
+    await this.typeResolver.load();
     this.refresh();
   }
 
@@ -433,6 +442,13 @@ export class PropertiesView extends ItemView {
         this.showMenu(new MouseEvent('contextmenu', { clientX: rect.left, clientY: rect.bottom }), property, node);
       }
     });
+    if (isKey) {
+      const type = this.plugin.typeResolver.typeFor(property);
+      const icon = el(button, 'span', 'pv-icon pv-type-icon');
+      icon.title = `Type: ${type}`;
+      icon.setAttribute('aria-hidden', 'true');
+      setIcon(icon, this.plugin.typeResolver.iconFor(property));
+    }
     el(button, 'span', 'pv-label', node.label);
     if (isKey && this.plugin.prefs.pinned.includes(property.id)) setIcon(el(button, 'span', 'pv-pin'), 'pin');
     if (!isKey) { const kind = (JSON.parse(node.id) as string[])[0]; if (kind !== 'string') el(button, 'span', 'pv-kind', kind); }

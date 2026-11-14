@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-11-14
+
+### Added
+
+- Property type icons in the tree. Types resolve from the vault's `.obsidian/types.json` through public `vault.adapter` APIs, then built-in `tags`, `aliases`, and `cssclasses` names, then a text fallback.
+
+### Changed
+
+- Refreshing the property index also reloads configured property types, so icon changes appear after a refresh.
+- The plugin description mentions property type icons again without using private Obsidian APIs.
+
 ## [1.0.2] - 2026-11-14
 
 ### Fixed
@@ -52,7 +63,8 @@ Initial public release.
 
 - Released under the MIT License. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 
-[Unreleased]: https://github.com/ajay126z/supercharged-properties/compare/1.0.2...HEAD
+[Unreleased]: https://github.com/ajay126z/supercharged-properties/compare/1.0.3...HEAD
+[1.0.3]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.3
 [1.0.2]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.2
 [1.0.1]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.1
 [1.0.0]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.0

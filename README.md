@@ -8,6 +8,7 @@ The plugin is read-only: it indexes frontmatter through Obsidian's metadata cach
 
 - **Full property tree** — every property, its values, and the notes that use them.
 - **Typed value rows** — strings, numbers, booleans, empty values, and nested lists are kept distinct. Repeated values are deduplicated per note.
+- **Property type icons** — rows show the icon for the type configured in Obsidian, such as text, list, tags, number, checkbox, date, or date & time. The plugin reads `.obsidian/types.json` through public APIs and falls back to built-in names and text.
 - **Search everything or narrow the scope** — search property names, values, note names, or paths, with automatic branch expansion for matches.
 - **Property picker** — include only the properties you care about, with All / None shortcuts and a live filter.
 - **Saved views (profiles)** — save a property selection, switch between views, then update, rename, or delete them.
@@ -15,7 +16,7 @@ The plugin is read-only: it indexes frontmatter through Obsidian's metadata cach
 - **Pinning and hiding** — keep important properties at the top and hide noisy ones.
 - **Native Search integration** — open an Obsidian property query for a property or value, copy the query, or copy matching note links.
 - **Accessible controls** — labelled buttons, keyboard-operable menus, visible focus states, and live summaries.
-- **Live updates** — edits, renames, deletes, metadata resolution, and type changes refresh the tree automatically.
+- **Live updates** — edits, renames, deletes, and metadata resolution refresh the tree automatically. Refreshing the index reloads property type icons.
 
 ## Requirements
 
@@ -136,6 +137,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, testing, and review con
 - [Publishing](docs/PUBLISHING.md)
 - [Release QA](docs/RELEASE-QA.md)
 - [Changelog](CHANGELOG.md)
+- [1.0.3 release notes](docs/releases/1.0.3.md)
 - [1.0.2 release notes](docs/releases/1.0.2.md)
 - [1.0.1 release notes](docs/releases/1.0.1.md)
 - [1.0.0 release notes](docs/releases/1.0.0.md)
