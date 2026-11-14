@@ -470,23 +470,33 @@ export class PropertiesView extends ItemView {
 
   private async search(property: PropertyNode, node: ValueNode): Promise<void> {
     const query = this.queryFor(property, node);
+    let created: WorkspaceLeaf | null = null;
     try {
       // The Search view is a host-internal interface; check it before use.
       let leaf = this.app.workspace.getLeavesOfType('search')[0];
       if (!leaf) {
-        leaf = this.app.workspace.getLeftLeaf(true) ?? this.app.workspace.getLeaf(true);
-        await leaf.setViewState({ type: 'search', active: true });
+        const newLeaf = this.app.workspace.getLeftLeaf(true) ?? this.app.workspace.getLeaf(true);
+        created = newLeaf; leaf = newLeaf;
+        await newLeaf.setViewState({ type: 'search', active: true });
       }
       const view = leaf.view as unknown as { setQuery?: (query: string) => void };
       if (typeof view.setQuery !== 'function') {
-        new Notice('Enable the Search core plugin to use this action.'); return;
+        created?.detach(); created = null;
+        new Notice('Enable the Search core plugin to use Open in Search.'); return;
       }
       view.setQuery(query);
+      created = null;
       await this.app.workspace.revealLeaf(leaf);
       if (node !== property && (JSON.parse(node.id) as string[])[0] === 'empty') {
         new Notice('Search matches null properties; the local empty row also includes blank strings and empty lists.');
       }
-    } catch { new Notice('Could not open Search. Your notes remain available in the property tree.'); }
+    } catch {
+      if (created) {
+        created.detach(); created = null;
+        new Notice('Enable the Search core plugin to use Open in Search.'); return;
+      }
+      new Notice('Could not open Search. Your notes remain available in the property tree.');
+    }
   }
 
   private showMenu(event: MouseEvent, property: PropertyNode, node: ValueNode): void {

@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-14
+
+### Fixed
+
+- **Open in Search** now closes the temporary pane and shows a clear notice when the core Search plugin is unavailable.
+
 ## [1.0.1] - 2026-11-14
 
 ### Removed
@@ -46,6 +52,7 @@ Initial public release.
 
 - Released under the MIT License. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 
-[Unreleased]: https://github.com/ajay126z/supercharged-properties/compare/1.0.1...HEAD
+[Unreleased]: https://github.com/ajay126z/supercharged-properties/compare/1.0.2...HEAD
+[1.0.2]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.2
 [1.0.1]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.1
 [1.0.0]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.0

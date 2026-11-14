@@ -751,23 +751,35 @@ var PropertiesView = class extends import_obsidian.ItemView {
   }
   async search(property, node) {
     const query = this.queryFor(property, node);
+    let created = null;
     try {
       let leaf = this.app.workspace.getLeavesOfType("search")[0];
       if (!leaf) {
-        leaf = this.app.workspace.getLeftLeaf(true) ?? this.app.workspace.getLeaf(true);
-        await leaf.setViewState({ type: "search", active: true });
+        const newLeaf = this.app.workspace.getLeftLeaf(true) ?? this.app.workspace.getLeaf(true);
+        created = newLeaf;
+        leaf = newLeaf;
+        await newLeaf.setViewState({ type: "search", active: true });
       }
       const view = leaf.view;
       if (typeof view.setQuery !== "function") {
-        new import_obsidian.Notice("Enable the Search core plugin to use this action.");
+        created?.detach();
+        created = null;
+        new import_obsidian.Notice("Enable the Search core plugin to use Open in Search.");
         return;
       }
       view.setQuery(query);
+      created = null;
       await this.app.workspace.revealLeaf(leaf);
       if (node !== property && JSON.parse(node.id)[0] === "empty") {
         new import_obsidian.Notice("Search matches null properties; the local empty row also includes blank strings and empty lists.");
       }
     } catch {
+      if (created) {
+        created.detach();
+        created = null;
+        new import_obsidian.Notice("Enable the Search core plugin to use Open in Search.");
+        return;
+      }
       new import_obsidian.Notice("Could not open Search. Your notes remain available in the property tree.");
     }
   }

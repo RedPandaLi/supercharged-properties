@@ -13,16 +13,19 @@ vi.mock('obsidian', () => ({
     showAtPosition() {}
   },
   Plugin: class {}, PluginSettingTab: class {}, Setting: class {},
-  TFile: class {}, Notice: class {}, setIcon: (element: HTMLElement, icon: string) => element.dataset.icon = icon
+  TFile: class {},
+  Notice: class { static messages: string[] = []; constructor(message: string) { (this.constructor as any).messages.push(message); } },
+  setIcon: (element: HTMLElement, icon: string) => element.dataset.icon = icon
 }));
 import { PropertiesView } from '../src/main';
 import { PropertyIndex } from '../src/index';
-import { TFile, Menu } from 'obsidian';
+import { TFile, Menu, Notice } from 'obsidian';
 let plugin: any;
 let view: PropertiesView;
 let openFile: ReturnType<typeof vi.fn>;
 beforeEach(async () => {
   document.body.replaceChildren();
+  (Notice as any).messages = [];
   const index = new PropertyIndex();
   index.update('Projects/One.md', { status: 'Done', tags: ['work', 'personal'] });
   index.update('Two.md', { status: 'Pending' });
@@ -78,6 +81,15 @@ it('opens native Search from a row menu', async () => {
   (document.querySelector('[aria-label="Toggle status (2)"]') as HTMLElement).dispatchEvent(new MouseEvent('contextmenu'));
   (Menu as any).items.find((item: any) => item.title === 'Open in Search').run();
   await Promise.resolve(); expect(setQuery).toHaveBeenCalledWith('["status"]');
+});
+it('removes a new leaf and explains when Search is unavailable', async () => {
+  const detach = vi.fn();
+  const leaf = { view: {}, setViewState: vi.fn().mockRejectedValue(new Error('missing view')), detach };
+  (view as any).app.workspace = { getLeavesOfType: () => [], getLeftLeaf: () => leaf, revealLeaf: vi.fn() };
+  (document.querySelector('[aria-label="Toggle status (2)"]') as HTMLElement).dispatchEvent(new MouseEvent('contextmenu'));
+  (Menu as any).items.find((item: any) => item.title === 'Open in Search').run();
+  await vi.waitFor(() => expect(detach).toHaveBeenCalledOnce());
+  expect((Notice as any).messages).toContain('Enable the Search core plugin to use Open in Search.');
 });
 it('clears search when collapsing all and preserves scoped selection', () => {
   plugin.prefs.scope = ['status'];

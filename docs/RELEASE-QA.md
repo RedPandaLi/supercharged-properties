@@ -95,7 +95,7 @@ Run this checklist against a build candidate before publishing. Automated checks
 - [ ] Right-click opens the row menu.
 - [ ] Shift+F10 and the Context Menu key open the same menu.
 - [ ] **Open in Search** opens the core Search view with a property query.
-- [ ] Disabling the core Search plugin produces a helpful notice instead of an error.
+- [ ] Disabling the core Search plugin produces a helpful notice, leaves no empty pane, and does not break the property tree.
 - [ ] **Copy search query** copies a correctly quoted query.
 - [ ] **Copy matching note links** copies wiki links for every matching note.
 - [ ] Empty-value searches explain the local empty-row approximation.
