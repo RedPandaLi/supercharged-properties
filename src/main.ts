@@ -12,6 +12,7 @@ import type { PropertyValueKind } from './frontmatter-values';
 
 const VIEW = 'scoped-properties';
 interface Preferences { counts: boolean; sort: SortOrder; hidden: string; expanded: string[]; pinned: string[]; scope: string[] | null; profiles: PropertyProfile[]; activeProfile: string | null }
+interface ScopeFilter { property: string; value: string; propertyLabel: string; label: string }
 const defaults: Preferences = { counts: true, sort: 'name', hidden: '', expanded: [], pinned: [], scope: null, profiles: [], activeProfile: null };
 
 export default class SuperchargedPropertiesPlugin extends Plugin {
@@ -172,6 +173,9 @@ export class PropertiesView extends ItemView {
   private searchHeader!: HTMLElement;
   private searchToggle!: HTMLButtonElement;
   private searchScopeButton!: HTMLButtonElement;
+  private filter: ScopeFilter | null = null;
+  private filterBar!: HTMLElement;
+  private filterLabel!: HTMLElement;
   private body!: HTMLElement;
   private summary!: HTMLElement;
   private scopeButton!: HTMLButtonElement;
@@ -249,6 +253,10 @@ export class PropertiesView extends ItemView {
     this.searchToggle = this.iconButton(actions, 'Toggle search', 'search', () => this.toggleSearch(this.searchHeader.hidden));
     this.searchToggle.setAttribute('aria-expanded', 'false');
     this.scopePanel = el(toolbar, 'div', 'pv-scope-panel'); this.scopePanel.hidden = true;
+    this.filterBar = el(this.contentEl, 'div', 'pv-filter-bar');
+    this.filterBar.hidden = true;
+    this.filterLabel = el(this.filterBar, 'span', 'pv-filter-label');
+    this.button(this.filterBar, 'Clear', 'Clear property filter', () => this.clearFilter());
     this.summary = el(this.contentEl, 'div', 'pv-summary'); this.summary.setAttribute('aria-live', 'polite');
     this.body = el(this.contentEl, 'div', 'pv-tree');
     this.body.setAttribute('aria-label', 'Properties, values and notes');
@@ -332,12 +340,12 @@ export class PropertiesView extends ItemView {
     this.profileDelete = this.button(buttons, 'Delete', 'Delete active profile', () => this.manageProfile('delete'));
     this.syncProfiles();
   }
-  private syncProfiles(): void {
+  private syncProfiles(index = this.activeIndex()): void {
     const profiles = this.plugin.prefs.profiles;
     const active = profiles.find(profile => profile.id === this.plugin.prefs.activeProfile);
     this.profileSelect.replaceChildren();
     const hidden = new Set(this.plugin.prefs.hidden.split('\n').map(fold).filter(Boolean));
-    const count = (keys: Iterable<string>) => new Set([...keys].filter(key => this.plugin.index.properties.has(key) && !hidden.has(key))).size;
+    const count = (keys: Iterable<string>) => new Set([...keys].filter(key => index.properties.has(key) && !hidden.has(key))).size;
     el(this.profileSelect, 'option', '', `All properties (${count(this.plugin.index.properties.keys())})`).value = 'all';
     if (this.plugin.prefs.scope !== null && !active) el(this.profileSelect, 'option', '', `Custom selection (${count(this.plugin.prefs.scope)})`).value = 'custom';
     for (const profile of profiles) {
@@ -372,12 +380,14 @@ export class PropertiesView extends ItemView {
     this.profileName.value = '';
     void this.plugin.save(); this.plugin.refresh(); this.render();
   }
-  private renderScopeChoices(): void {
+  private renderScopeChoices(index = this.activeIndex()): void {
     if (!this.scopeChoices) return;
     const scroll = this.scopeChoices.scrollTop;
     this.scopeChoices.replaceChildren();
-    const choices = new Map([...this.plugin.index.properties.values()].map(property => [property.id, property]));
+    const choices = new Map([...index.properties.values()].map(property => [property.id, property]));
+    const exclude = this.filter?.property;
     for (const key of this.plugin.prefs.scope ?? []) {
+      if (key === exclude) continue;
       if (!choices.has(key)) choices.set(key, { id: key, label: key, paths: new Set(), values: new Map() });
     }
     const properties = this.sorted(choices.values()).filter(property => fold(property.label).includes(fold(this.scopeQuery)));
@@ -400,16 +410,30 @@ export class PropertiesView extends ItemView {
   private matches(text: string, scope: string): boolean {
     return (this.searchScope === 'any' || this.searchScope === scope) && fold(text).includes(this.query);
   }
+  private clearFilter(): void {
+    this.filter = null;
+    this.render();
+  }
+  private filterPaths(): Set<string> | null {
+    if (!this.filter) return null;
+    return this.plugin.index.properties.get(this.filter.property)?.values.get(this.filter.value)?.paths ?? new Set<string>();
+  }
+  private activeIndex(): PropertyIndex {
+    if (!this.filter) return this.plugin.index;
+    return this.plugin.index.scoped(this.filterPaths() ?? new Set<string>(), this.filter.property);
+  }
   render(): void {
     if (!this.body) return;
-    this.syncProfiles();
+    const index = this.activeIndex();
+    const scopePaths = this.filterPaths();
+    this.syncProfiles(index);
     const focusId = (this.contentEl.ownerDocument.activeElement as HTMLElement | null)?.dataset.pvFocus;
     const scroll = this.body.scrollTop; this.body.replaceChildren();
-    if (!this.scopePanel.hidden) this.renderScopeChoices();
+    if (!this.scopePanel.hidden) this.renderScopeChoices(index);
     const hidden = new Set(this.plugin.prefs.hidden.split('\n').map(fold).filter(Boolean));
     const pinned = new Set(this.plugin.prefs.pinned);
     const scope = this.plugin.prefs.scope;
-    const properties = this.sorted(this.plugin.index.properties.values()).filter(p => !hidden.has(p.id) && (scope === null || scope.includes(p.id)))
+    const properties = this.sorted(index.properties.values()).filter(p => !hidden.has(p.id) && (scope === null || scope.includes(p.id)))
       .sort((a, b) => Number(pinned.has(b.id)) - Number(pinned.has(a.id)));
     this.sortButton.title = `Sort: ${sortOptions[this.plugin.prefs.sort]}`;
     let visible = 0;
@@ -463,8 +487,19 @@ export class PropertiesView extends ItemView {
     this.expandToggle.setAttribute('aria-pressed', String(this.allExpanded));
     this.expandToggle.disabled = this.visibleKeys.length === 0;
     setIcon(this.expandToggle, this.allExpanded ? 'fold-vertical' : 'list-tree');
-    this.summary.textContent = `${visible} properties · ${scope === null ? 'Entire vault' : 'Custom selection'}`;
-    if (!visible) el(this.body, 'div', 'pv-empty', scope?.length === 0 ? 'Choose properties above to start exploring.' : 'No matching properties. Adjust your search or selection.');
+    this.filterBar.hidden = !this.filter;
+    if (this.filter) {
+      const text = `Filtered by ${this.filter.propertyLabel} = ${this.filter.label} · ${scopePaths?.size ?? 0} notes`;
+      this.filterLabel.textContent = text;
+      this.filterBar.title = text;
+    }
+    this.summary.textContent = `${visible} properties · ${this.filter ? `Filtered (${scopePaths?.size ?? 0} notes)` : scope === null ? 'Entire vault' : 'Custom selection'}`;
+    if (!visible) {
+      let message = 'No matching properties. Adjust your search or selection.';
+      if (this.filter && !this.query) message = 'No notes match this filter.';
+      else if (!this.filter && !this.query && scope?.length === 0) message = 'Choose properties above to start exploring.';
+      el(this.body, 'div', 'pv-empty', message);
+    }
     this.body.scrollTop = scroll;
     if (focusId) Array.from(this.contentEl.querySelectorAll<HTMLElement>('[data-pv-focus]')).find(e => e.dataset.pvFocus === focusId)?.focus({ preventScroll: true });
   }
@@ -571,6 +606,10 @@ export class PropertiesView extends ItemView {
       }));
     }
     if (node !== property) {
+      menu.addItem(item => item.setTitle('Filter notes by this value').setIcon('filter').onClick(() => {
+        this.filter = { property: property.id, value: node.id, propertyLabel: property.label, label: node.label };
+        this.render();
+      }));
       const [kind] = JSON.parse(node.id) as [PropertyValueKind, string];
       const addEdit = (title: string, mode: ValueEditMode) => menu.addItem(item => item.setTitle(title).setIcon('pencil').onClick(() => this.plugin.editValue(property, node, mode)));
       if (kind !== 'empty') {

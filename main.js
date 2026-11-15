@@ -102,7 +102,7 @@ function readList(input) {
 // src/index.ts
 var fold = (text) => text.trim().normalize("NFC").toLowerCase();
 var natural = (a, b) => a.localeCompare(b, void 0, { numeric: true, sensitivity: "base" });
-var PropertyIndex = class {
+var PropertyIndex = class _PropertyIndex {
   constructor() {
     this.properties = /* @__PURE__ */ new Map();
     this.memberships = /* @__PURE__ */ new Map();
@@ -149,6 +149,27 @@ var PropertyIndex = class {
       }
     }
     this.memberships.set(path, membership);
+  }
+  /** Derive a read-only index for a note subset. Do not update the result. */
+  scoped(paths, excludeKey) {
+    const result = new _PropertyIndex();
+    const intersect = (source) => {
+      const kept = /* @__PURE__ */ new Set();
+      for (const path of source) if (paths.has(path)) kept.add(path);
+      return kept;
+    };
+    for (const [key, property] of this.properties) {
+      if (key === excludeKey) continue;
+      const propertyPaths = intersect(property.paths);
+      if (!propertyPaths.size) continue;
+      const values = /* @__PURE__ */ new Map();
+      for (const [id, value] of property.values) {
+        const valuePaths = intersect(value.paths);
+        if (valuePaths.size) values.set(id, { id: value.id, label: value.label, paths: valuePaths });
+      }
+      result.properties.set(key, { id: property.id, label: property.label, paths: propertyPaths, values });
+    }
+    return result;
   }
 };
 
@@ -751,6 +772,7 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     this.plugin = plugin;
     this.query = "";
     this.searchScope = "any";
+    this.filter = null;
     this.scopeQuery = "";
     this.visibleKeys = [];
     this.allExpanded = false;
@@ -842,6 +864,10 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     this.searchToggle.setAttribute("aria-expanded", "false");
     this.scopePanel = el2(toolbar, "div", "pv-scope-panel");
     this.scopePanel.hidden = true;
+    this.filterBar = el2(this.contentEl, "div", "pv-filter-bar");
+    this.filterBar.hidden = true;
+    this.filterLabel = el2(this.filterBar, "span", "pv-filter-label");
+    this.button(this.filterBar, "Clear", "Clear property filter", () => this.clearFilter());
     this.summary = el2(this.contentEl, "div", "pv-summary");
     this.summary.setAttribute("aria-live", "polite");
     this.body = el2(this.contentEl, "div", "pv-tree");
@@ -957,12 +983,12 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     this.profileDelete = this.button(buttons, "Delete", "Delete active profile", () => this.manageProfile("delete"));
     this.syncProfiles();
   }
-  syncProfiles() {
+  syncProfiles(index = this.activeIndex()) {
     const profiles = this.plugin.prefs.profiles;
     const active = profiles.find((profile) => profile.id === this.plugin.prefs.activeProfile);
     this.profileSelect.replaceChildren();
     const hidden = new Set(this.plugin.prefs.hidden.split("\n").map(fold).filter(Boolean));
-    const count = (keys) => new Set([...keys].filter((key) => this.plugin.index.properties.has(key) && !hidden.has(key))).size;
+    const count = (keys) => new Set([...keys].filter((key) => index.properties.has(key) && !hidden.has(key))).size;
     el2(this.profileSelect, "option", "", `All properties (${count(this.plugin.index.properties.keys())})`).value = "all";
     if (this.plugin.prefs.scope !== null && !active) el2(this.profileSelect, "option", "", `Custom selection (${count(this.plugin.prefs.scope)})`).value = "custom";
     for (const profile of profiles) {
@@ -1011,12 +1037,14 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     this.plugin.refresh();
     this.render();
   }
-  renderScopeChoices() {
+  renderScopeChoices(index = this.activeIndex()) {
     if (!this.scopeChoices) return;
     const scroll = this.scopeChoices.scrollTop;
     this.scopeChoices.replaceChildren();
-    const choices = new Map([...this.plugin.index.properties.values()].map((property) => [property.id, property]));
+    const choices = new Map([...index.properties.values()].map((property) => [property.id, property]));
+    const exclude = this.filter?.property;
     for (const key of this.plugin.prefs.scope ?? []) {
+      if (key === exclude) continue;
       if (!choices.has(key)) choices.set(key, { id: key, label: key, paths: /* @__PURE__ */ new Set(), values: /* @__PURE__ */ new Map() });
     }
     const properties = this.sorted(choices.values()).filter((property) => fold(property.label).includes(fold(this.scopeQuery)));
@@ -1043,17 +1071,31 @@ var PropertiesView = class extends import_obsidian4.ItemView {
   matches(text, scope) {
     return (this.searchScope === "any" || this.searchScope === scope) && fold(text).includes(this.query);
   }
+  clearFilter() {
+    this.filter = null;
+    this.render();
+  }
+  filterPaths() {
+    if (!this.filter) return null;
+    return this.plugin.index.properties.get(this.filter.property)?.values.get(this.filter.value)?.paths ?? /* @__PURE__ */ new Set();
+  }
+  activeIndex() {
+    if (!this.filter) return this.plugin.index;
+    return this.plugin.index.scoped(this.filterPaths() ?? /* @__PURE__ */ new Set(), this.filter.property);
+  }
   render() {
     if (!this.body) return;
-    this.syncProfiles();
+    const index = this.activeIndex();
+    const scopePaths = this.filterPaths();
+    this.syncProfiles(index);
     const focusId = this.contentEl.ownerDocument.activeElement?.dataset.pvFocus;
     const scroll = this.body.scrollTop;
     this.body.replaceChildren();
-    if (!this.scopePanel.hidden) this.renderScopeChoices();
+    if (!this.scopePanel.hidden) this.renderScopeChoices(index);
     const hidden = new Set(this.plugin.prefs.hidden.split("\n").map(fold).filter(Boolean));
     const pinned = new Set(this.plugin.prefs.pinned);
     const scope = this.plugin.prefs.scope;
-    const properties = this.sorted(this.plugin.index.properties.values()).filter((p) => !hidden.has(p.id) && (scope === null || scope.includes(p.id))).sort((a, b) => Number(pinned.has(b.id)) - Number(pinned.has(a.id)));
+    const properties = this.sorted(index.properties.values()).filter((p) => !hidden.has(p.id) && (scope === null || scope.includes(p.id))).sort((a, b) => Number(pinned.has(b.id)) - Number(pinned.has(a.id)));
     this.sortButton.title = `Sort: ${sortOptions[this.plugin.prefs.sort]}`;
     let visible = 0;
     this.visibleKeys = [];
@@ -1111,8 +1153,19 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     this.expandToggle.setAttribute("aria-pressed", String(this.allExpanded));
     this.expandToggle.disabled = this.visibleKeys.length === 0;
     (0, import_obsidian4.setIcon)(this.expandToggle, this.allExpanded ? "fold-vertical" : "list-tree");
-    this.summary.textContent = `${visible} properties \xB7 ${scope === null ? "Entire vault" : "Custom selection"}`;
-    if (!visible) el2(this.body, "div", "pv-empty", scope?.length === 0 ? "Choose properties above to start exploring." : "No matching properties. Adjust your search or selection.");
+    this.filterBar.hidden = !this.filter;
+    if (this.filter) {
+      const text = `Filtered by ${this.filter.propertyLabel} = ${this.filter.label} \xB7 ${scopePaths?.size ?? 0} notes`;
+      this.filterLabel.textContent = text;
+      this.filterBar.title = text;
+    }
+    this.summary.textContent = `${visible} properties \xB7 ${this.filter ? `Filtered (${scopePaths?.size ?? 0} notes)` : scope === null ? "Entire vault" : "Custom selection"}`;
+    if (!visible) {
+      let message2 = "No matching properties. Adjust your search or selection.";
+      if (this.filter && !this.query) message2 = "No notes match this filter.";
+      else if (!this.filter && !this.query && scope?.length === 0) message2 = "Choose properties above to start exploring.";
+      el2(this.body, "div", "pv-empty", message2);
+    }
     this.body.scrollTop = scroll;
     if (focusId) Array.from(this.contentEl.querySelectorAll("[data-pv-focus]")).find((e) => e.dataset.pvFocus === focusId)?.focus({ preventScroll: true });
   }
@@ -1245,6 +1298,10 @@ ${property.label}`;
       }));
     }
     if (node !== property) {
+      menu.addItem((item) => item.setTitle("Filter notes by this value").setIcon("filter").onClick(() => {
+        this.filter = { property: property.id, value: node.id, propertyLabel: property.label, label: node.label };
+        this.render();
+      }));
       const [kind] = JSON.parse(node.id);
       const addEdit = (title, mode) => menu.addItem((item) => item.setTitle(title).setIcon("pencil").onClick(() => this.plugin.editValue(property, node, mode)));
       if (kind !== "empty") {

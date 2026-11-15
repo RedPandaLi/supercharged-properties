@@ -47,6 +47,11 @@ beforeEach(async () => {
   await view.onOpen();
 });
 const click = (label: string) => (document.querySelector(`[aria-label="${label}"]`) as HTMLElement).click();
+function filterRow(label: string) {
+  (document.querySelector(`[aria-label="${label}"]`) as HTMLElement)
+    .dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
+  (Menu as any).items.find((item: any) => item.title === 'Filter notes by this value').run();
+}
 it('uses a single property tree and expands notes inline', () => {
   expect(document.querySelector('.pv-results')).toBeNull();
   click('Expand status'); click('Show notes with status: Done (1)');
@@ -300,4 +305,59 @@ it('writes only generated text on explicit Copy actions and never reads the clip
   expect(writeText).toHaveBeenLastCalledWith('[[Projects/One]]\n[[Two]]');
   expect(readText).not.toHaveBeenCalled();
   Reflect.deleteProperty(navigator, 'clipboard');
+});
+it('filters the tree to notes with a value and excludes that property', () => {
+  click('Expand status');
+  filterRow('Show notes with status: Done (1)');
+
+  const bar = document.querySelector('.pv-filter-bar') as HTMLElement;
+  expect(bar.hidden).toBe(false);
+  expect(bar.textContent).toContain('Filtered by status = Done');
+  expect(bar.textContent).toContain('1 notes');
+  expect(document.querySelector('[aria-label="Toggle status (1)"]')).toBeNull();
+  expect(document.querySelector('[aria-label="Toggle tags (1)"]')).not.toBeNull();
+  expect(document.querySelector('.pv-summary')!.textContent).toBe('1 properties · Filtered (1 notes)');
+});
+
+it('clears the filter and restores the full tree', () => {
+  click('Expand status');
+  filterRow('Show notes with status: Done (1)');
+  click('Clear property filter');
+
+  expect((document.querySelector('.pv-filter-bar') as HTMLElement).hidden).toBe(true);
+  expect(document.querySelector('[aria-label="Toggle status (2)"]')).not.toBeNull();
+  expect(document.querySelector('.pv-summary')!.textContent).toBe('2 properties · Entire vault');
+});
+
+it('omits the filtered property from the property picker', () => {
+  click('Expand status');
+  filterRow('Show notes with status: Done (1)');
+  click('Choose properties to show');
+
+  expect(document.querySelector('[aria-label="Include status"]')).toBeNull();
+  expect(document.querySelector('[aria-label="Include tags"]')).not.toBeNull();
+});
+
+it('searches only the filtered notes', () => {
+  click('Expand status');
+  filterRow('Show notes with status: Done (1)');
+  click('Toggle search');
+  const input = document.querySelector('[aria-label="Filter properties and values"]') as HTMLInputElement;
+
+  input.value = 'Two'; input.dispatchEvent(new Event('input'));
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('No matching properties');
+
+  input.value = 'One'; input.dispatchEvent(new Event('input'));
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('One');
+  expect(document.querySelector('.pv-tree')!.textContent).not.toContain('Two');
+});
+
+it('shows an empty state when the filtered value disappears', () => {
+  click('Expand status');
+  filterRow('Show notes with status: Done (1)');
+  plugin.index.remove('Projects/One.md');
+  view.render();
+
+  expect(document.querySelector('.pv-filter-bar')!.textContent).toContain('0 notes');
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('No notes match this filter.');
 });
