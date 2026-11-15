@@ -11,6 +11,7 @@ it('shows all preview paths and applies only the displayed preview after explici
   const apply = vi.fn().mockResolvedValue(undefined);
   const modal = new ValueEditModal({} as App, { request: { property: 'status', kind: 'string', value: 'doing', mode: 'rename', replacement: 'active' }, siblings: [], preview: () => plan, apply });
   modal.onOpen();
+  expect(modal.contentEl.textContent).toContain('every matching note listed in the preview');
   expect(modal.contentEl.querySelectorAll('.pv-edit-change')).toHaveLength(6);
   expect(apply).not.toHaveBeenCalled();
   (modal.contentEl.querySelector('.mod-cta') as HTMLButtonElement).click();

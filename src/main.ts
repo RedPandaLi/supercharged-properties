@@ -413,6 +413,7 @@ export class PropertiesView extends ItemView {
   private clearFilter(): void {
     this.filter = null;
     this.render();
+    this.searchToggle.focus();
   }
   private filterPaths(): Set<string> | null {
     if (!this.filter) return null;

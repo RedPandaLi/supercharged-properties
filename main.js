@@ -518,7 +518,7 @@ var ValueEditModal = class extends import_obsidian3.Modal {
         this.request = { ...this.request, delimiter: value };
       }, "Split the current text into a list. Each trimmed part becomes an item.");
     }
-    el(this.contentEl, "p", "pv-edit-hint", "Edits affect matching values across the vault, including notes hidden by filters. Undo is available for the last batch until the plugin reloads. Applying another batch replaces that undo. YAML formatting may change.");
+    el(this.contentEl, "p", "pv-edit-hint", "Edits affect every matching note listed in the preview. Undo is available for the last batch until the plugin reloads. Applying another batch replaces that undo. YAML formatting may change.");
     this.previewEl = el(this.contentEl, "div", "pv-edit-preview");
     this.previewEl.setAttribute("aria-live", "polite");
     const actions = el(this.contentEl, "div", "pv-edit-actions");
@@ -1074,6 +1074,7 @@ var PropertiesView = class extends import_obsidian4.ItemView {
   clearFilter() {
     this.filter = null;
     this.render();
+    this.searchToggle.focus();
   }
   filterPaths() {
     if (!this.filter) return null;

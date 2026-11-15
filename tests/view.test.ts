@@ -324,6 +324,7 @@ it('clears the filter and restores the full tree', () => {
   filterRow('Show notes with status: Done (1)');
   click('Clear property filter');
 
+  expect(document.activeElement).toBe(document.querySelector('[aria-label="Toggle search"]'));
   expect((document.querySelector('.pv-filter-bar') as HTMLElement).hidden).toBe(true);
   expect(document.querySelector('[aria-label="Toggle status (2)"]')).not.toBeNull();
   expect(document.querySelector('.pv-summary')!.textContent).toBe('2 properties · Entire vault');
