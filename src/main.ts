@@ -167,6 +167,8 @@ function el<K extends keyof HTMLElementTagNameMap>(parent: HTMLElement, tag: K, 
   return parent.createEl(tag, { cls, text });
 }
 
+function noteCount(count: number): string { return `${count} ${count === 1 ? 'note' : 'notes'}`; }
+
 export class PropertiesView extends ItemView {
   private query = '';
   private searchScope = 'any';
@@ -175,6 +177,7 @@ export class PropertiesView extends ItemView {
   private searchScopeButton!: HTMLButtonElement;
   private filter: ScopeFilter | null = null;
   private filterBar!: HTMLElement;
+  private filterClear!: HTMLButtonElement;
   private filterLabel!: HTMLElement;
   private body!: HTMLElement;
   private summary!: HTMLElement;
@@ -256,7 +259,7 @@ export class PropertiesView extends ItemView {
     this.filterBar = el(this.contentEl, 'div', 'pv-filter-bar');
     this.filterBar.hidden = true;
     this.filterLabel = el(this.filterBar, 'span', 'pv-filter-label');
-    this.button(this.filterBar, 'Clear', 'Clear property filter', () => this.clearFilter());
+    this.filterClear = this.button(this.filterBar, 'Clear', 'Clear property filter', () => this.clearFilter());
     this.summary = el(this.contentEl, 'div', 'pv-summary'); this.summary.setAttribute('aria-live', 'polite');
     this.body = el(this.contentEl, 'div', 'pv-tree');
     this.body.setAttribute('aria-label', 'Properties, values and notes');
@@ -490,14 +493,17 @@ export class PropertiesView extends ItemView {
     setIcon(this.expandToggle, this.allExpanded ? 'fold-vertical' : 'list-tree');
     this.filterBar.hidden = !this.filter;
     if (this.filter) {
-      const text = `Filtered by ${this.filter.propertyLabel} = ${this.filter.label} · ${scopePaths?.size ?? 0} notes`;
+      const text = `Filtered by ${this.filter.propertyLabel} = ${this.filter.label} · ${noteCount(scopePaths?.size ?? 0)}`;
       this.filterLabel.textContent = text;
       this.filterBar.title = text;
+    } else {
+      this.filterLabel.textContent = '';
+      this.filterBar.removeAttribute('title');
     }
-    this.summary.textContent = `${visible} properties · ${this.filter ? `Filtered (${scopePaths?.size ?? 0} notes)` : scope === null ? 'Entire vault' : 'Custom selection'}`;
+    this.summary.textContent = `${visible} properties · ${this.filter ? `Filtered (${noteCount(scopePaths?.size ?? 0)})` : scope === null ? 'Entire vault' : 'Custom selection'}`;
     if (!visible) {
       let message = 'No matching properties. Adjust your search or selection.';
-      if (this.filter && !this.query) message = 'No notes match this filter.';
+      if (this.filter && !this.query) message = (scopePaths?.size ?? 0) === 0 ? 'No notes match this filter.' : 'No other properties in these notes.';
       else if (!this.filter && !this.query && scope?.length === 0) message = 'Choose properties above to start exploring.';
       el(this.body, 'div', 'pv-empty', message);
     }
@@ -610,6 +616,7 @@ export class PropertiesView extends ItemView {
       menu.addItem(item => item.setTitle('Filter notes by this value').setIcon('filter').onClick(() => {
         this.filter = { property: property.id, value: node.id, propertyLabel: property.label, label: node.label };
         this.render();
+        this.filterClear.focus();
       }));
       const [kind] = JSON.parse(node.id) as [PropertyValueKind, string];
       const addEdit = (title: string, mode: ValueEditMode) => menu.addItem(item => item.setTitle(title).setIcon('pencil').onClick(() => this.plugin.editValue(property, node, mode)));

@@ -313,10 +313,11 @@ it('filters the tree to notes with a value and excludes that property', () => {
   const bar = document.querySelector('.pv-filter-bar') as HTMLElement;
   expect(bar.hidden).toBe(false);
   expect(bar.textContent).toContain('Filtered by status = Done');
-  expect(bar.textContent).toContain('1 notes');
+  expect(bar.textContent).toContain('1 note');
   expect(document.querySelector('[aria-label="Toggle status (1)"]')).toBeNull();
   expect(document.querySelector('[aria-label="Toggle tags (1)"]')).not.toBeNull();
-  expect(document.querySelector('.pv-summary')!.textContent).toBe('1 properties · Filtered (1 notes)');
+  expect(document.querySelector('.pv-summary')!.textContent).toBe('1 properties · Filtered (1 note)');
+  expect(document.activeElement).toBe(document.querySelector('[aria-label="Clear property filter"]'));
 });
 
 it('clears the filter and restores the full tree', () => {
@@ -326,17 +327,52 @@ it('clears the filter and restores the full tree', () => {
 
   expect(document.activeElement).toBe(document.querySelector('[aria-label="Toggle search"]'));
   expect((document.querySelector('.pv-filter-bar') as HTMLElement).hidden).toBe(true);
+  expect((document.querySelector('.pv-filter-bar') as HTMLElement).title).toBe('');
   expect(document.querySelector('[aria-label="Toggle status (2)"]')).not.toBeNull();
   expect(document.querySelector('.pv-summary')!.textContent).toBe('2 properties · Entire vault');
 });
 
 it('omits the filtered property from the property picker', () => {
+  plugin.prefs.scope = ['status', 'tags']; view.render();
   click('Expand status');
   filterRow('Show notes with status: Done (1)');
   click('Choose properties to show');
 
   expect(document.querySelector('[aria-label="Include status"]')).toBeNull();
   expect(document.querySelector('[aria-label="Include tags"]')).not.toBeNull();
+});
+
+it('does not offer filtering on property rows', () => {
+  (document.querySelector('[aria-label="Toggle status (2)"]') as HTMLElement)
+    .dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
+
+  expect((Menu as any).items.map((item: any) => item.title)).not.toContain('Filter notes by this value');
+});
+
+it('filters by the empty value row', () => {
+  plugin.index.update('Empty.md', { status: null });
+  view.render();
+  click('Expand status');
+  filterRow('Show notes with status: (empty) (1)');
+
+  expect(document.querySelector('.pv-filter-bar')!.textContent).toContain('status = (empty)');
+  expect(document.querySelector('.pv-tree')!.textContent).toContain('No other properties in these notes.');
+});
+
+it('passes only filtered paths to bulk edits', () => {
+  const editValue = vi.fn();
+  plugin.editValue = editValue;
+  click('Expand status');
+  filterRow('Show notes with status: Done (1)');
+  click('Expand tags');
+  (document.querySelector('[aria-label="Show notes with tags: work (1)"]') as HTMLElement)
+    .dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
+  (Menu as any).items.find((item: any) => item.title === 'Rename value…').run();
+
+  expect(editValue).toHaveBeenCalledOnce();
+  const [property, node] = editValue.mock.calls[0];
+  expect(property.id).toBe('tags');
+  expect([...node.paths]).toEqual(['Projects/One.md']);
 });
 
 it('searches only the filtered notes', () => {

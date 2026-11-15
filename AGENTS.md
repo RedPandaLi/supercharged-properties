@@ -22,7 +22,7 @@ export PATH="$HOME/.nvm/versions/node/v24.22.2/bin:$PATH"
 ```sh
 npm run lint       # ESLint with eslint-plugin-obsidianmd, zero warnings allowed
 npm run build      # tsc --noEmit, then esbuild -> main.js
-npm test           # Vitest, 10 files / 67 tests
+npm test           # Vitest, 10 files / 79 tests
 npm run validate   # lint + build + test + release validation
 npm run release:prepare  # validate, then stage dist/<version>/ assets
 ```

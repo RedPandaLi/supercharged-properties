@@ -82,4 +82,13 @@ describe('scoped index', () => {
     expect(index.scoped(new Set()).properties.size).toBe(0);
     expect(index.scoped(new Set(['missing.md'])).properties.size).toBe(0);
   });
+
+  it('drops values that exist only outside the note set', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { tags: ['work'] });
+    index.update('b.md', { tags: ['work', 'urgent'] });
+
+    const scoped = index.scoped(new Set(['a.md']));
+    expect([...scoped.properties.get('tags')!.values.values()].map(value => value.label)).toEqual(['work']);
+  });
 });

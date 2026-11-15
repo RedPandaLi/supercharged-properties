@@ -89,7 +89,7 @@ The toolbar provides:
   - **Copy matching note links**
   - **Pin property** / **Unpin property**
   - **Hide property**
-- Right-click a value and choose **Filter notes by this value** to scope the tree to those notes. The filtered property is hidden while the filter is active; use **Clear** in the filter bar to return to the whole vault. Scoped filters apply to searches, counts, copied links, and bulk value edits, but **Open in Search** still runs a vault-wide query.
+- Right-click a value and choose **Filter notes by this value** to scope the tree to those notes. The filtered property is hidden while the filter is active; use **Clear** in the filter bar to return to the whole vault. Scoped filters apply to searches, counts, copied links, and bulk value edits, but **Open in Search** and **Copy search query** still run a vault-wide query.
 
 ### Bulk value edits
 

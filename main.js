@@ -150,7 +150,10 @@ var PropertyIndex = class _PropertyIndex {
     }
     this.memberships.set(path, membership);
   }
-  /** Derive a read-only index for a note subset. Do not update the result. */
+  /**
+   * Derive a read-only index for a note subset. Do not update the result.
+   * @param excludeKey Folded property key to omit from the result.
+   */
   scoped(paths, excludeKey) {
     const result = new _PropertyIndex();
     const intersect = (source) => {
@@ -766,6 +769,9 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian4.Plugin {
 function el2(parent, tag, cls = "", text = "") {
   return parent.createEl(tag, { cls, text });
 }
+function noteCount(count) {
+  return `${count} ${count === 1 ? "note" : "notes"}`;
+}
 var PropertiesView = class extends import_obsidian4.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
@@ -867,7 +873,7 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     this.filterBar = el2(this.contentEl, "div", "pv-filter-bar");
     this.filterBar.hidden = true;
     this.filterLabel = el2(this.filterBar, "span", "pv-filter-label");
-    this.button(this.filterBar, "Clear", "Clear property filter", () => this.clearFilter());
+    this.filterClear = this.button(this.filterBar, "Clear", "Clear property filter", () => this.clearFilter());
     this.summary = el2(this.contentEl, "div", "pv-summary");
     this.summary.setAttribute("aria-live", "polite");
     this.body = el2(this.contentEl, "div", "pv-tree");
@@ -1156,14 +1162,17 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     (0, import_obsidian4.setIcon)(this.expandToggle, this.allExpanded ? "fold-vertical" : "list-tree");
     this.filterBar.hidden = !this.filter;
     if (this.filter) {
-      const text = `Filtered by ${this.filter.propertyLabel} = ${this.filter.label} \xB7 ${scopePaths?.size ?? 0} notes`;
+      const text = `Filtered by ${this.filter.propertyLabel} = ${this.filter.label} \xB7 ${noteCount(scopePaths?.size ?? 0)}`;
       this.filterLabel.textContent = text;
       this.filterBar.title = text;
+    } else {
+      this.filterLabel.textContent = "";
+      this.filterBar.removeAttribute("title");
     }
-    this.summary.textContent = `${visible} properties \xB7 ${this.filter ? `Filtered (${scopePaths?.size ?? 0} notes)` : scope === null ? "Entire vault" : "Custom selection"}`;
+    this.summary.textContent = `${visible} properties \xB7 ${this.filter ? `Filtered (${noteCount(scopePaths?.size ?? 0)})` : scope === null ? "Entire vault" : "Custom selection"}`;
     if (!visible) {
       let message2 = "No matching properties. Adjust your search or selection.";
-      if (this.filter && !this.query) message2 = "No notes match this filter.";
+      if (this.filter && !this.query) message2 = (scopePaths?.size ?? 0) === 0 ? "No notes match this filter." : "No other properties in these notes.";
       else if (!this.filter && !this.query && scope?.length === 0) message2 = "Choose properties above to start exploring.";
       el2(this.body, "div", "pv-empty", message2);
     }
@@ -1302,6 +1311,7 @@ ${property.label}`;
       menu.addItem((item) => item.setTitle("Filter notes by this value").setIcon("filter").onClick(() => {
         this.filter = { property: property.id, value: node.id, propertyLabel: property.label, label: node.label };
         this.render();
+        this.filterClear.focus();
       }));
       const [kind] = JSON.parse(node.id);
       const addEdit = (title, mode) => menu.addItem((item) => item.setTitle(title).setIcon("pencil").onClick(() => this.plugin.editValue(property, node, mode)));

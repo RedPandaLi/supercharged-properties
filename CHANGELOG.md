@@ -6,16 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
-### Fixed
-
-- Use Obsidian's `createEl` helpers for UI elements and specific CSS selectors instead of `!important`.
-- Stage and publish only the three Obsidian release assets, removing stale staging files.
-
 ### Added
 
 - Scope the property tree to notes sharing a value, with subset counts and note links.
 - GitHub Actions builds and cryptographically attests release assets before publication. Manual runs attest an existing release only when rebuilt assets match exactly.
 - Document Markdown-only vault enumeration and explicit, write-only clipboard actions.
+
+### Fixed
+
+- Use Obsidian's `createEl` helpers for UI elements and specific CSS selectors instead of `!important`.
+- Stage and publish only the three Obsidian release assets, removing stale staging files.
 
 ## [1.1.0] - 2026-11-14
 

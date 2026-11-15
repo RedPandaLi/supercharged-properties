@@ -56,7 +56,10 @@ export class PropertyIndex {
     this.memberships.set(path, membership);
   }
 
-  /** Derive a read-only index for a note subset. Do not update the result. */
+  /**
+   * Derive a read-only index for a note subset. Do not update the result.
+   * @param excludeKey Folded property key to omit from the result.
+   */
   scoped(paths: ReadonlySet<string>, excludeKey?: string): PropertyIndex {
     const result = new PropertyIndex();
     const intersect = (source: Set<string>): Set<string> => {
