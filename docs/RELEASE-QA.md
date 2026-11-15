@@ -15,7 +15,8 @@ Run this checklist against a build candidate before publishing. Automated checks
 - [ ] `npm test` passes all suites.
 - [ ] `npm run validate` passes.
 - [ ] `npm run release:prepare` creates `dist/<version>/` with the expected files.
-- [ ] `SHA256SUMS` verifies for every staged file.
+- [ ] Only `main.js`, `manifest.json`, and `styles.css` are staged and attached.
+- [ ] GitHub Actions succeeds and `gh attestation verify` verifies each downloaded asset.
 - [ ] The release tag equals `manifest.json` `version`, without a `v` prefix.
 
 ## Installation and startup

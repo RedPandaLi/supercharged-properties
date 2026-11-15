@@ -589,11 +589,7 @@ function titleFor(mode) {
   }
 }
 function el(parent, tag, cls = "", text = "") {
-  const node = parent.ownerDocument.createElement(tag);
-  node.className = cls;
-  node.textContent = text;
-  parent.appendChild(node);
-  return node;
+  return parent.createEl(tag, { cls, text });
 }
 
 // src/main.ts
@@ -747,11 +743,7 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian4.Plugin {
   }
 };
 function el2(parent, tag, cls = "", text = "") {
-  const node = parent.ownerDocument.createElement(tag);
-  node.className = cls;
-  node.textContent = text;
-  parent.appendChild(node);
-  return node;
+  return parent.createEl(tag, { cls, text });
 }
 var PropertiesView = class extends import_obsidian4.ItemView {
   constructor(leaf, plugin) {

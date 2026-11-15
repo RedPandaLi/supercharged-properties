@@ -22,7 +22,7 @@ export PATH="$HOME/.nvm/versions/node/v24.22.2/bin:$PATH"
 ```sh
 npm run lint       # ESLint with eslint-plugin-obsidianmd, zero warnings allowed
 npm run build      # tsc --noEmit, then esbuild -> main.js
-npm test           # Vitest, 10 files / 66 tests
+npm test           # Vitest, 10 files / 67 tests
 npm run validate   # lint + build + test + release validation
 npm run release:prepare  # validate, then stage dist/<version>/ assets
 ```
@@ -69,6 +69,6 @@ When changing accessible labels, menu titles, or DOM classes, update the tests t
 
 ## Release validation
 
-`scripts/validate-release.mjs` enforces matching versions across `manifest.json`, `package.json`, `package-lock.json`, and `versions.json`, MIT licensing, asset presence, no machine-specific paths, no unexpected runtime imports, and no dead relative Markdown links. `scripts/prepare-release.mjs` copies `main.js`, `manifest.json`, `styles.css`, `LICENSE`, `NOTICE.md`, and release notes into `dist/<version>/` and writes `SHA256SUMS`; it does not publish.
+`scripts/validate-release.mjs` enforces matching versions across `manifest.json`, `package.json`, `package-lock.json`, and `versions.json`, MIT licensing, asset presence, no machine-specific paths, no unexpected runtime imports, and no dead relative Markdown links. `scripts/prepare-release.mjs` copies only `main.js`, `manifest.json`, and `styles.css` into a freshly recreated `dist/<version>/`; it does not publish.
 
 License metadata must stay synchronized across `package.json`, `package-lock.json` (root package), `LICENSE`, `NOTICE.md`, the esbuild banner, and SPDX headers in source files. The license check expects the canonical MIT License text in `LICENSE`; do not replace it with a short notice.

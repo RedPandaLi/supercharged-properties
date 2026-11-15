@@ -163,11 +163,7 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(parent: HTMLElement, tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = parent.ownerDocument.createElement(tag);
-  node.className = cls;
-  node.textContent = text;
-  parent.appendChild(node);
-  return node;
+  return parent.createEl(tag, { cls, text });
 }
 
 export class PropertiesView extends ItemView {

@@ -1,4 +1,4 @@
-.pv-view { display:flex; flex-direction:column; height:100%; gap:0; padding:0 !important; overflow:hidden; color:var(--text-normal); font-size:var(--nav-item-size, var(--font-ui-small)); }
+.workspace-leaf-content .view-content.pv-view { display:flex; flex-direction:column; height:100%; gap:0; padding:0; overflow:hidden; color:var(--text-normal); font-size:var(--nav-item-size, var(--font-ui-small)); }
 .pv-toolbar { flex-shrink:0; padding:0 8px 8px; border-bottom:1px solid var(--background-modifier-border); }
 .pv-search { display:flex; align-items:center; gap:7px; border:1px solid var(--background-modifier-border); border-radius:var(--radius-s, 4px); padding:0 7px; background:var(--background-modifier-form-field, var(--background-primary)); }
 .pv-search:focus-within { border-color:var(--interactive-accent); }
@@ -28,7 +28,7 @@
 .pv-pin svg { width:11px; height:11px; }
 .pv-notes { margin:0 0 3px 13px; padding-inline-start:8px; border-inline-start:1px solid var(--background-modifier-border); }
 .pv-view button.pv-file { display:flex; justify-content:flex-start; align-items:center; gap:6px; width:100%; min-height:26px; height:auto; padding:3px 6px; background:transparent; border:0; box-shadow:none; color:var(--text-normal); text-align:left; }
-.pv-file:hover { background:var(--background-modifier-hover) !important; }
+.pv-view button.pv-file:hover { background:var(--background-modifier-hover); }
 .pv-file:hover .pv-note-name { color:var(--text-accent); }
 .pv-file .pv-icon { color:var(--text-faint); }
 .pv-file .pv-icon svg { width:12px; height:12px; }

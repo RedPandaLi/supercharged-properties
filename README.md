@@ -18,6 +18,10 @@ Browsing remains read-only. Explicit bulk value actions can now modify frontmatt
 - **Accessible controls** — labelled buttons, keyboard-operable menus, visible focus states, and live summaries.
 - **Live updates** — edits, renames, deletes, and metadata resolution refresh the tree automatically. Refreshing the index reloads property type icons.
 
+## Data access
+
+The property index enumerates Markdown notes in the current vault and reads their cached frontmatter. It needs those paths to provide vault-wide browsing and bulk editing; it does not enumerate non-Markdown attachments. Property icons read the vault's property-type configuration. Copy actions write a generated query or note-link list to the clipboard only when you select them. The plugin never reads clipboard contents and does not send vault data over the network. Explicit bulk edits write frontmatter only after confirmation.
+
 ## Requirements
 
 - Obsidian **1.7.2** or later.

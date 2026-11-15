@@ -283,3 +283,21 @@ it('opens the four-option sort menu and applies and saves the chosen order', () 
   expect(document.querySelector('.pv-property-row .pv-label')!.textContent).toBe('status');
   expect(plugin.save).toHaveBeenCalled();
 });
+it('writes only generated text on explicit Copy actions and never reads the clipboard', async () => {
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  const readText = vi.fn();
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText, readText } });
+  view.render();
+  expect(writeText).not.toHaveBeenCalled();
+  const row = document.querySelector('[aria-label="Toggle status (2)"]')!;
+  row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
+  expect(writeText).not.toHaveBeenCalled();
+  (Menu as any).items.find((item: any) => item.title === 'Copy search query').run();
+  await Promise.resolve();
+  expect(writeText).toHaveBeenLastCalledWith('["status"]');
+  (Menu as any).items.find((item: any) => item.title === 'Copy matching note links').run();
+  await Promise.resolve();
+  expect(writeText).toHaveBeenLastCalledWith('[[Projects/One]]\n[[Two]]');
+  expect(readText).not.toHaveBeenCalled();
+  Reflect.deleteProperty(navigator, 'clipboard');
+});

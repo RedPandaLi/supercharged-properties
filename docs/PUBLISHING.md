@@ -1,6 +1,6 @@
 # Publishing Supercharged Properties
 
-This document describes how to prepare and publish a release. Publishing is manual: the release scripts stage and validate files but do not upload anything.
+This document describes how to prepare and publish a release. Local scripts stage and validate files. Pushing a version tag triggers the GitHub Actions workflow that builds, attests, and publishes the release.
 
 ## Before the first release
 
@@ -76,38 +76,39 @@ dist/<version>/
   main.js
   manifest.json
   styles.css
-  LICENSE
-  NOTICE.md
-  release-notes.md
-  SHA256SUMS
 ```
 
-`release-notes.md` is copied from `docs/releases/<version>.md`. Nothing is uploaded or published by the script.
+The staging directory for this version is recreated to remove stale files. License and notice documents remain in the repository; release notes are used as the GitHub release description. Do not upload these documents or checksum files as separate release assets.
 
-## Create the GitHub release
+## Create an attested GitHub release
 
-1. Commit the source changes and the rebuilt `main.js`.
-2. Create a tag that exactly matches `manifest.json` `version`, without a `v` prefix:
+1. Update version metadata, changelog, and `docs/releases/<version>.md`.
+2. Run `npm run release:prepare`, review the output, and perform manual QA.
+3. Commit the source and rebuilt `main.js`, then push the branch.
+4. Tag that commit with the exact manifest version, without a `v` prefix, and push the tag.
+5. Watch **Actions → Release and attest** until it succeeds.
 
-   ```sh
-   git tag 1.0.0
-   git push origin 1.0.0
-   ```
+The workflow installs locked dependencies, validates and builds the tagged source, checks the tag against the manifest, creates build-provenance attestations for the three assets, verifies them, and publishes a release containing only those assets. The GitHub-maintained actions are pinned to commit hashes. Update those pins deliberately when upgrading actions.
 
-3. Create a GitHub release for that tag. Use the contents of `docs/releases/<version>.md` as the release description.
-4. Attach the three files Obsidian expects:
-   - `main.js`
-   - `manifest.json`
-   - `styles.css`
+Attestations require `id-token: write` and `attestations: write`; release publication requires `contents: write`. These permissions are limited to the release job. The workflow does not run on pull requests. See [GitHub's artifact-attestation documentation](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations).
 
-   You may also attach `LICENSE`, `NOTICE.md`, and `SHA256SUMS` for transparency.
-5. Publish the release and verify the assets download correctly.
+### Attest an existing release
 
-You can optionally confirm the tag matches the manifest before releasing:
+Manually run **Release and attest** from a commit whose manifest and build correspond to the published version. The workflow rebuilds that commit, downloads the existing release's three supported assets, and compares every byte before attesting. A mismatch stops the workflow. Manual runs never replace assets or publish a new release. The attestation identifies the workflow run and its source commit, which may be a later commit containing only release-workflow changes.
+
+Do not run this against newer source expecting it to attest an older binary. Publish a new patch release for source changes; do not rewrite existing release binaries or tags.
+
+### Verify downloaded assets
+
+With GitHub CLI installed and authenticated, run these commands beside the downloaded assets:
 
 ```sh
-RELEASE_TAG=1.0.0 node scripts/validate-release.mjs
+gh attestation verify main.js --repo ajay126z/supercharged-properties
+gh attestation verify manifest.json --repo ajay126z/supercharged-properties
+gh attestation verify styles.css --repo ajay126z/supercharged-properties
 ```
+
+Attestations are stored by GitHub; no extra attestation file needs to be attached to the release. Confirm the attestation's source commit and workflow match the build you expect.
 
 ## After publishing
 

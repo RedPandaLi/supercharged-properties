@@ -176,6 +176,14 @@ Value-row menus offer **Rename value…**, **Merge value…**, **Convert to wiki
 
 Read the [bulk editing guide](BULK-EDITING.md) for examples, exact matching rules, preview and confirmation, partial failures, and undo. Each operation covers matching notes across the vault regardless of your tree search or saved view. The full preview shows which notes will change.
 
+## Data access and privacy
+
+The plugin enumerates Markdown notes in your current vault to build the property index and reads cached frontmatter. This is necessary for vault-wide browsing and matching-note counts. It does not enumerate non-Markdown attachments. It also reads the vault's configured property types for icons.
+
+**Copy search query** and **Copy matching note links** write only the generated query or links when you select the action. They replace the current clipboard contents, but never read them. No clipboard monitoring runs in the background. The plugin does not send vault data to external services. Explicit bulk edits write frontmatter after confirmation.
+
+Security scanners may flag vault enumeration and clipboard access as capabilities. These capabilities support the features described above; removing them would remove vault-wide indexing or the Copy actions.
+
 ## Settings and commands
 
 Open **Settings → Supercharged Properties**.
