@@ -55,5 +55,27 @@ export class PropertyIndex {
     }
     this.memberships.set(path, membership);
   }
+
+  /** Derive a read-only index for a note subset. Do not update the result. */
+  scoped(paths: ReadonlySet<string>, excludeKey?: string): PropertyIndex {
+    const result = new PropertyIndex();
+    const intersect = (source: Set<string>): Set<string> => {
+      const kept = new Set<string>();
+      for (const path of source) if (paths.has(path)) kept.add(path);
+      return kept;
+    };
+    for (const [key, property] of this.properties) {
+      if (key === excludeKey) continue;
+      const propertyPaths = intersect(property.paths);
+      if (!propertyPaths.size) continue;
+      const values = new Map<string, ValueNode>();
+      for (const [id, value] of property.values) {
+        const valuePaths = intersect(value.paths);
+        if (valuePaths.size) values.set(id, { id: value.id, label: value.label, paths: valuePaths });
+      }
+      result.properties.set(key, { id: property.id, label: property.label, paths: propertyPaths, values });
+    }
+    return result;
+  }
 }
 

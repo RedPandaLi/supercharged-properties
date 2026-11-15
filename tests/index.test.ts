@@ -49,3 +49,37 @@ describe('property membership', () => {
     expect(index.properties.size).toBe(3);
   });
 });
+
+describe('scoped index', () => {
+  it('keeps only rows and counts that intersect the note set', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { status: 'Done', tags: ['work', 'personal'] });
+    index.update('b.md', { status: 'Pending', tags: ['work'] });
+
+    const scoped = index.scoped(new Set(['a.md']), 'status');
+    expect(scoped.properties.has('status')).toBe(false);
+    const tags = scoped.properties.get('tags')!;
+    expect(tags.paths.size).toBe(1);
+    expect([...tags.values.values()].find(value => value.label === 'personal')!.paths.size).toBe(1);
+    expect([...tags.values.values()].find(value => value.label === 'work')!.paths.size).toBe(1);
+  });
+
+  it('preserves labels, kinds, and notes with unsupported object values', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { Status: 'Done', object: { nested: 1 }, flag: false });
+
+    const scoped = index.scoped(new Set(['a.md']));
+    expect(scoped.properties.get('status')!.label).toBe('Status');
+    expect(scoped.properties.get('object')!.values.size).toBe(0);
+    expect(scoped.properties.get('object')!.paths.size).toBe(1);
+    expect([...scoped.properties.get('flag')!.values.values()][0].label).toBe('false');
+  });
+
+  it('returns an empty index for an empty or unmatched note set', () => {
+    const index = new PropertyIndex();
+    index.update('a.md', { status: 'Done' });
+
+    expect(index.scoped(new Set()).properties.size).toBe(0);
+    expect(index.scoped(new Set(['missing.md'])).properties.size).toBe(0);
+  });
+});
