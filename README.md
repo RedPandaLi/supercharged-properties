@@ -159,6 +159,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, testing, and review con
 - [Publishing](docs/PUBLISHING.md)
 - [Release QA](docs/RELEASE-QA.md)
 - [Changelog](CHANGELOG.md)
+- [1.2.0 release notes](docs/releases/1.2.0.md)
 - [1.1.0 release notes](docs/releases/1.1.0.md)
 - [1.0.3 release notes](docs/releases/1.0.3.md)
 - [1.0.2 release notes](docs/releases/1.0.2.md)

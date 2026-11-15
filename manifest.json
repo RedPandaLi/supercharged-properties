@@ -1,10 +1,10 @@
 {
   "id": "scoped-properties",
   "name": "Scoped Properties",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "minAppVersion": "1.7.2",
   "description": "Explore vault properties, values, and notes, and bulk-edit values with previews and undo.",
-  "author": "Ajay Zapadiya",
+  "author": "RedPandaLi",
   "isDesktopOnly": false,
-  "authorUrl": "https://github.com/ajay126z"
+  "authorUrl": "https://github.com/RedPandaLi"
 }

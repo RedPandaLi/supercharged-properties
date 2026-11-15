@@ -1,10 +1,12 @@
 # Changelog
 
-All notable changes to Scoped Properties are documented here. Entries below 1.1.0 are from the upstream [Supercharged Properties](https://github.com/ajay126z/supercharged-properties) project.
+All notable changes to Scoped Properties are documented here. Entries below 1.2.0 are from the upstream [Supercharged Properties](https://github.com/ajay126z/supercharged-properties) project.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.2.0] - 2026-11-15
 
 ### Added
 
@@ -90,7 +92,9 @@ Initial public release.
 
 - Released under the MIT License. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 
-[Unreleased]: https://github.com/ajay126z/supercharged-properties/compare/1.0.3...HEAD
+[Unreleased]: https://github.com/RedPandaLi/supercharged-properties/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/RedPandaLi/supercharged-properties/releases/tag/1.2.0
+[1.1.0]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.1.0
 [1.0.3]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.3
 [1.0.2]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.2
 [1.0.1]: https://github.com/ajay126z/supercharged-properties/releases/tag/1.0.1

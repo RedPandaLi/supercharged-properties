@@ -16,7 +16,7 @@ assert.equal(lock.version, manifest.version, 'Lockfile version differs');
 assert.equal(lock.packages[''].version, manifest.version);
 assert.equal(versions[manifest.version], manifest.minAppVersion);
 assert.equal(typeof manifest.isDesktopOnly, 'boolean');
-assert.equal(manifest.author, 'Ajay Zapadiya');
+assert.equal(manifest.author, 'RedPandaLi');
 assert(manifest.description.length <= 250 && manifest.description.endsWith('.'));
 assert.equal(pkg.license, 'MIT');
 assert.equal(lock.packages[''].license, pkg.license, 'Lockfile license differs');

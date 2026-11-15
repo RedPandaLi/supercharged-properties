@@ -2,7 +2,7 @@
 
 ## Scoped Properties
 
-Scoped Properties is a fork of [Supercharged Properties](https://github.com/ajay126z/supercharged-properties). Original code and documentation are Copyright (c) 2026 Ajay Zapadiya.
+Scoped Properties is a fork of [Supercharged Properties](https://github.com/ajay126z/supercharged-properties). Original code and documentation are Copyright (c) 2026 Ajay Zapadiya. Fork maintained by RedPandaLi.
 
 Licensed under the MIT License. See [LICENSE](LICENSE) for the full text.
 

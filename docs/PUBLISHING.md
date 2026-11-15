@@ -103,9 +103,9 @@ Do not run this against newer source expecting it to attest an older binary. Pub
 With GitHub CLI installed and authenticated, run these commands beside the downloaded assets:
 
 ```sh
-gh attestation verify main.js --repo ajay126z/supercharged-properties
-gh attestation verify manifest.json --repo ajay126z/supercharged-properties
-gh attestation verify styles.css --repo ajay126z/supercharged-properties
+gh attestation verify main.js --repo RedPandaLi/supercharged-properties
+gh attestation verify manifest.json --repo RedPandaLi/supercharged-properties
+gh attestation verify styles.css --repo RedPandaLi/supercharged-properties
 ```
 
 Attestations are stored by GitHub; no extra attestation file needs to be attached to the release. Confirm the attestation's source commit and workflow match the build you expect.

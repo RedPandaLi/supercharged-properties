@@ -4,7 +4,7 @@ Scoped Properties displays your vault's YAML frontmatter as a tree of **properti
 
 Browsing, searching, sorting, and saving views do not modify notes. The bulk value actions write frontmatter only after you review a preview and click Apply.
 
-This guide describes version 1.1.0 plus unreleased value-scoped filtering. Earlier releases may not offer all actions.
+This guide describes version 1.2.0. Earlier releases may not offer all actions.
 
 ## Contents
 
