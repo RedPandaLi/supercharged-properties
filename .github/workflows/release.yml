@@ -73,5 +73,5 @@ jobs:
           GH_REPO: ${{ github.repository }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          gh release create "$VERSION" --verify-tag --draft --title "Supercharged Properties $VERSION" --notes-file "docs/releases/$VERSION.md" "dist/$VERSION/main.js" "dist/$VERSION/manifest.json" "dist/$VERSION/styles.css"
+          gh release create "$VERSION" --verify-tag --draft --title "Scoped Properties $VERSION" --notes-file "docs/releases/$VERSION.md" "dist/$VERSION/main.js" "dist/$VERSION/manifest.json" "dist/$VERSION/styles.css"
           gh release edit "$VERSION" --draft=false --latest
