@@ -1,0 +1,77 @@
+name: Release and attest
+on:
+  push:
+    tags: ['[0-9]*.[0-9]*.[0-9]*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.22.2'
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Validate and build
+        run: npm run release:prepare
+      - name: Check release version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          VERSION=$(node -p "require('./manifest.json').version")
+          if [ "$EVENT_NAME" = push ]; then
+            test "$REF_NAME" = "$VERSION"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Check existing release before attesting
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/published"
+          gh release download "$VERSION" --dir "$RUNNER_TEMP/published" --pattern main.js --pattern manifest.json --pattern styles.css
+          for asset in main.js manifest.json styles.css; do
+            cmp "dist/$VERSION/$asset" "$RUNNER_TEMP/published/$asset"
+          done
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            dist/${{ steps.version.outputs.version }}/main.js
+            dist/${{ steps.version.outputs.version }}/manifest.json
+            dist/${{ steps.version.outputs.version }}/styles.css
+      - name: Verify attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for asset in main.js manifest.json styles.css; do
+            gh attestation verify "dist/$VERSION/$asset" --repo "$GH_REPO"
+          done
+      - name: Publish only Obsidian assets
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$VERSION" --verify-tag --draft --title "Supercharged Properties $VERSION" --notes-file "docs/releases/$VERSION.md" "dist/$VERSION/main.js" "dist/$VERSION/manifest.json" "dist/$VERSION/styles.css"
+          gh release edit "$VERSION" --draft=false --latest
