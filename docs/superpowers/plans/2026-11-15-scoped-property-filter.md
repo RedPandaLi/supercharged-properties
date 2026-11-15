@@ -385,6 +385,7 @@ git commit -m "feat: filter the property tree by a value"
 **Files:**
 - Modify: `README.md`
 - Modify: `docs/USER-GUIDE.md`
+- Modify: `docs/BULK-EDITING.md`
 - Modify: `CHANGELOG.md`
 
 **Interfaces:**
@@ -425,7 +426,38 @@ The filter bar under the toolbar shows the condition and the number of matching 
 Filters are not saved: reopening the view or reloading Obsidian returns to the whole vault.
 ```
 
-- [ ] **Step 3: Add the changelog entry**
+- [ ] **Step 3: Correct the existing bulk-edit scope claims**
+
+A filtered tree now narrows bulk edits to the previewed subset, so three current statements are false. Make these exact replacements:
+
+In `README.md`, replace:
+```md
+Actions cover matching values across the vault, regardless of search filters or saved views.
+```
+with:
+```md
+Actions cover the matching notes listed in the preview. Search and saved views do not restrict the edit, but an active value filter narrows it to the filtered notes.
+```
+
+In `docs/USER-GUIDE.md`, replace:
+```md
+Each operation covers matching notes across the vault regardless of your tree search or saved view.
+```
+with:
+```md
+Each operation covers the matching notes listed in the preview. Search and saved views do not restrict the edit, but an active value filter narrows it to the filtered notes.
+```
+
+In `docs/BULK-EDITING.md`, replace:
+```md
+**Scope:** each action covers the indexed notes for the selected value across the vault. Search, saved views, and collapsed branches do not restrict the edit to visible notes. There is no per-note inclusion checkbox. Inspect the full preview before confirming.
+```
+with:
+```md
+**Scope:** each action covers the matching notes listed in the preview. Search, saved views, and collapsed branches do not restrict the edit to visible notes. An active value filter does restrict it to the filtered notes. There is no per-note inclusion checkbox. Inspect the full preview before confirming.
+```
+
+- [ ] **Step 4: Add the changelog entry**
 
 In `CHANGELOG.md`, under `## [Unreleased]`, before `### Fixed`, add:
 
@@ -435,15 +467,15 @@ In `CHANGELOG.md`, under `## [Unreleased]`, before `### Fixed`, add:
 - Scope the property tree to notes sharing a value, with subset counts and note links.
 ```
 
-- [ ] **Step 4: Validate documentation and links**
+- [ ] **Step 5: Validate documentation and links**
 
 Run: `npm run validate`
 Expected: PASS; the release validator checks all local Markdown links.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add README.md docs/USER-GUIDE.md CHANGELOG.md
+git add README.md docs/USER-GUIDE.md docs/BULK-EDITING.md CHANGELOG.md
 git commit -m "docs: document value-scoped filtering"
 ```
 
