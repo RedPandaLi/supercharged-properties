@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Supercharged Properties: public property-type icons.
+// Scoped Properties (fork of Supercharged Properties): public property-type icons.
 
 import { normalizePath, type App } from 'obsidian';
 import { fold, PropertyNode } from './index';

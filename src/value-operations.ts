@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Supercharged Properties: pure frontmatter value transforms.
+// Scoped Properties (fork of Supercharged Properties): pure frontmatter value transforms.
 
 import { fold } from './index';
 import type { PropertyValueKind } from './frontmatter-values';

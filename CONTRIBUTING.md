@@ -1,6 +1,6 @@
-# Contributing to Supercharged Properties
+# Contributing to Scoped Properties
 
-Thanks for helping improve Supercharged Properties. This guide covers local setup, the project conventions, and what to check before opening a pull request.
+Thanks for helping improve Scoped Properties. This guide covers local setup, the project conventions, and what to check before opening a pull request.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ npm install
 npm run build
 ```
 
-To try a local build, create `<YourVault>/.obsidian/plugins/supercharged-properties/` and copy `main.js`, `manifest.json`, and `styles.css` into it. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
+To try a local build, create `<YourVault>/.obsidian/plugins/scoped-properties/` and copy `main.js`, `manifest.json`, and `styles.css` into it. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 
 ## Commands
 

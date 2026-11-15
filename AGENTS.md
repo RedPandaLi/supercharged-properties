@@ -2,9 +2,9 @@
 
 ## Project
 
-Supercharged Properties is an Obsidian plugin that indexes YAML frontmatter across the vault and renders a full-pane tree of properties, values, and notes. It supports search, sorting, property scoping, saved profiles, pinning, hiding, and native Obsidian Search integration. Browsing is read-only; explicit bulk value edits use preview, confirmation, conflict checks, and session-scoped one-step undo through public processFrontMatter.
+Scoped Properties is a fork of [Supercharged Properties](https://github.com/ajay126z/supercharged-properties). It is an Obsidian plugin that indexes YAML frontmatter across the vault and renders a full-pane tree of properties, values, and notes. It supports search, sorting, property scoping, saved profiles, pinning, hiding, and native Obsidian Search integration. Browsing is read-only; explicit bulk value edits use preview, confirmation, conflict checks, and session-scoped one-step undo through public processFrontMatter.
 
-- Plugin ID: `supercharged-properties`
+- Plugin ID: `scoped-properties`
 - Runtime entry: `src/main.ts` bundled to `main.js` (CommonJS, ES2020)
 - Minimum Obsidian version: `1.7.2` (`manifest.json`, `versions.json`)
 - License: `MIT`; full text in `LICENSE`, notices in `NOTICE.md`

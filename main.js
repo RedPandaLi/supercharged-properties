@@ -1,4 +1,4 @@
-/* Supercharged Properties — MIT. See LICENSE and NOTICE.md. */
+/* Scoped Properties (fork of Supercharged Properties) — MIT. See LICENSE and NOTICE.md. */
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -593,7 +593,7 @@ function el(parent, tag, cls = "", text = "") {
 }
 
 // src/main.ts
-var VIEW = "supercharged-properties";
+var VIEW = "scoped-properties";
 var defaults = { counts: true, sort: "name", hidden: "", expanded: [], pinned: [], scope: null, profiles: [], activeProfile: null };
 var SuperchargedPropertiesPlugin = class extends import_obsidian4.Plugin {
   constructor() {
@@ -620,7 +620,7 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian4.Plugin {
     await this.typeResolver.load();
     this.valueEditor = new ValueEditor(this.app);
     this.registerView(VIEW, (leaf) => new PropertiesView(leaf, this));
-    this.addRibbonIcon("list-tree", "Open Supercharged Properties", () => {
+    this.addRibbonIcon("list-tree", "Open Scoped Properties", () => {
       void this.open();
     });
     this.addCommand({ id: "open", name: "Open sidebar", callback: () => {
@@ -700,7 +700,7 @@ var SuperchargedPropertiesPlugin = class extends import_obsidian4.Plugin {
   save() {
     const snapshot = JSON.parse(JSON.stringify(this.prefs));
     this.saveQueue = this.saveQueue.then(() => this.saveData(snapshot)).catch(() => {
-      new import_obsidian4.Notice("Could not save Supercharged Properties settings. Check vault permissions and available storage.");
+      new import_obsidian4.Notice("Could not save Scoped Properties settings. Check vault permissions and available storage.");
     });
     this.refresh();
     return this.saveQueue;
@@ -761,7 +761,7 @@ var PropertiesView = class extends import_obsidian4.ItemView {
     return VIEW;
   }
   getDisplayText() {
-    return "Supercharged Properties";
+    return "Scoped Properties";
   }
   getIcon() {
     return "list-tree";
@@ -1241,7 +1241,7 @@ var PropertiesView = class extends import_obsidian4.ItemView {
 ${property.label}`;
         void this.plugin.save();
         this.render();
-        new import_obsidian4.Notice("Property hidden. Restore it in Supercharged Properties settings.");
+        new import_obsidian4.Notice("Property hidden. Restore it in Scoped Properties settings.");
       }));
     }
     if (node !== property) {

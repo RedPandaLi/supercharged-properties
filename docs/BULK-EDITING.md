@@ -6,7 +6,7 @@ Bulk edits let you standardize a property's values across notes. They are explic
 
 ## Preview and confirm every batch
 
-1. Expand a property in Supercharged Properties.
+1. Expand a property in Scoped Properties.
 2. Right-click the value you want to change, or focus its label and press Shift+F10 / the Context Menu key.
 3. Choose an edit action and supply its replacement or delimiter if needed.
 4. Review the affected-note count and scroll through the complete list of paths and before/after values.
@@ -137,7 +137,7 @@ A preview may therefore contain fewer notes than the tree row's count: some note
 
 ## Undo the last batch
 
-Open the command palette and run **Supercharged Properties: Undo last value edit**. One invocation attempts to restore the previous property value in every successfully edited note from the last batch. Undo runs immediately; there is no second preview dialog.
+Open the command palette and run **Scoped Properties: Undo last value edit**. One invocation attempts to restore the previous property value in every successfully edited note from the last batch. Undo runs immediately; there is no second preview dialog.
 
 Undo restores a note only if its edited property still equals the value written by the batch. Later changes to that property are skipped; changes to other properties are preserved. A skipped or failed undo entry remains available for retry, and the notice reports restored, skipped, and failed counts. Retrying does not force an overwrite of a conflicting value.
 

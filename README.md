@@ -1,8 +1,10 @@
-# Supercharged Properties
+# Scoped Properties
 
-Supercharged Properties is an Obsidian plugin that turns your vault's YAML frontmatter into a full-pane, browsable tree of **properties → values → notes**. Explore how metadata is used across your vault, filter it, save focused views, and jump straight to the notes you need.
+Scoped Properties is an Obsidian plugin that turns your vault's YAML frontmatter into a full-pane, browsable tree of **properties → values → notes**. Explore how metadata is used across your vault, filter it, save focused views, and jump straight to the notes you need.
 
 Browsing remains read-only. Explicit bulk value actions can now modify frontmatter after you review and confirm a preview.
+
+> **Fork notice:** This is a fork of [ajay126z/supercharged-properties](https://github.com/ajay126z/supercharged-properties), maintained at [RedPandaLi/supercharged-properties](https://github.com/RedPandaLi/supercharged-properties). Original code and documentation are Copyright (c) 2026 Ajay Zapadiya, licensed under the MIT License (see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md)).
 
 ## Features
 
@@ -32,14 +34,14 @@ The property index enumerates Markdown notes in the current vault and reads thei
 
 ### Community plugins
 
-If the plugin is listed, open **Settings → Community plugins → Browse**, search for **Supercharged Properties**, install, and enable it.
+This fork is not published in the community plugin browser. Install it manually or with a tool such as BRAT.
 
 ### Manual installation
 
 1. Create this folder in your vault:
 
    ```text
-   <YourVault>/.obsidian/plugins/supercharged-properties/
+   <YourVault>/.obsidian/plugins/scoped-properties/
    ```
 
 2. Copy these files into it:
@@ -47,7 +49,7 @@ If the plugin is listed, open **Settings → Community plugins → Browse**, sea
    - `manifest.json`
    - `styles.css`
 
-3. Reload Obsidian, then enable **Supercharged Properties** under **Settings → Community plugins**.
+3. Reload Obsidian, then enable **Scoped Properties** under **Settings → Community plugins**.
 
 ### From source
 
@@ -62,9 +64,9 @@ Copy `main.js`, `manifest.json`, and `styles.css` into your plugin folder as des
 
 Open the view with the ribbon icon or a command:
 
-- **Supercharged Properties: Open sidebar**
-- **Supercharged Properties: Open in tab**
-- **Supercharged Properties: Refresh property index**
+- **Scoped Properties: Open sidebar**
+- **Scoped Properties: Open in tab**
+- **Scoped Properties: Refresh property index**
 
 The toolbar provides:
 
@@ -95,7 +97,7 @@ The dialog lists every affected path and its before/after value. Actions cover m
 
 Click **Apply to N notes** to confirm. Notes whose property changed since preview are skipped. Failures are reported individually; successful notes can still be undone. Obsidian's frontmatter writer may reformat YAML, including comments and quoting; note bodies are not edited.
 
-Use **Supercharged Properties: Undo last value edit** in the command palette to restore the previous property values in one step. Undo preserves other properties and skips values edited since the batch. Failed or skipped undo entries can be retried. Undo is held in memory: another successful batch replaces it, and restarting or disabling the plugin clears it. Renamed or deleted notes cannot be restored through their old paths. This is a property-value undo, not a byte-for-byte YAML formatting restore.
+Use **Scoped Properties: Undo last value edit** in the command palette to restore the previous property values in one step. Undo preserves other properties and skips values edited since the batch. Failed or skipped undo entries can be retried. Undo is held in memory: another successful batch replaces it, and restarting or disabling the plugin clears it. Renamed or deleted notes cannot be restored through their old paths. This is a property-value undo, not a byte-for-byte YAML formatting restore.
 
 ### Search scopes
 
@@ -114,7 +116,7 @@ Open **Choose properties to show**, select the properties you want, and use **Sa
 
 ## Settings
 
-Open **Settings → Supercharged Properties**:
+Open **Settings → Scoped Properties**:
 
 - **Show note counts** — display the number of distinct notes for each property and value.
 - **Sort by** — set the default sort order.
@@ -171,4 +173,4 @@ Third-party notices are documented in [NOTICE.md](NOTICE.md).
 
 ## Disclaimer
 
-Supercharged Properties is an independent community plugin and is not affiliated with or endorsed by Obsidian. Obsidian is a trademark of Dynalist Inc.
+Scoped Properties is an independent community plugin and is not affiliated with or endorsed by Obsidian. Obsidian is a trademark of Dynalist Inc.

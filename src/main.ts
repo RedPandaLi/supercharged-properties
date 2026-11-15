@@ -10,7 +10,7 @@ import { ValueEditModal } from './value-dialog';
 import { isWikilink, type ValueEditMode, type ValueEditRequest } from './value-operations';
 import type { PropertyValueKind } from './frontmatter-values';
 
-const VIEW = 'supercharged-properties';
+const VIEW = 'scoped-properties';
 interface Preferences { counts: boolean; sort: SortOrder; hidden: string; expanded: string[]; pinned: string[]; scope: string[] | null; profiles: PropertyProfile[]; activeProfile: string | null }
 const defaults: Preferences = { counts: true, sort: 'name', hidden: '', expanded: [], pinned: [], scope: null, profiles: [], activeProfile: null };
 
@@ -41,7 +41,7 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
     await this.typeResolver.load();
     this.valueEditor = new ValueEditor(this.app);
     this.registerView(VIEW, leaf => new PropertiesView(leaf, this));
-    this.addRibbonIcon('list-tree', 'Open Supercharged Properties', () => { void this.open(); });
+    this.addRibbonIcon('list-tree', 'Open Scoped Properties', () => { void this.open(); });
     this.addCommand({ id: 'open', name: 'Open sidebar', callback: () => { void this.open(); } });
     this.addCommand({ id: 'open-tab', name: 'Open in tab', callback: () => { void this.openTab(); } });
     this.addCommand({ id: 'rebuild', name: 'Refresh property index', callback: () => this.rebuild() });
@@ -114,7 +114,7 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
     // Snapshot each update and serialize writes so rapid UI actions cannot overwrite newer settings.
     const snapshot: unknown = JSON.parse(JSON.stringify(this.prefs));
     this.saveQueue = this.saveQueue.then(() => this.saveData(snapshot)).catch(() => {
-      new Notice('Could not save Supercharged Properties settings. Check vault permissions and available storage.');
+      new Notice('Could not save Scoped Properties settings. Check vault permissions and available storage.');
     });
     this.refresh();
     return this.saveQueue;
@@ -193,7 +193,7 @@ export class PropertiesView extends ItemView {
 
   constructor(leaf: WorkspaceLeaf, private plugin: SuperchargedPropertiesPlugin) { super(leaf); }
   getViewType(): string { return VIEW; }
-  getDisplayText(): string { return 'Supercharged Properties'; }
+  getDisplayText(): string { return 'Scoped Properties'; }
   getIcon(): string { return 'list-tree'; }
 
   async onOpen(): Promise<void> {
@@ -567,7 +567,7 @@ export class PropertiesView extends ItemView {
       }));
       menu.addItem(item => item.setTitle('Hide property').setIcon('eye-off').onClick(() => {
         this.plugin.prefs.hidden += `\n${property.label}`; void this.plugin.save(); this.render();
-        new Notice('Property hidden. Restore it in Supercharged Properties settings.');
+        new Notice('Property hidden. Restore it in Scoped Properties settings.');
       }));
     }
     if (node !== property) {

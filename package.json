@@ -1,5 +1,5 @@
 {
-  "name": "supercharged-properties",
+  "name": "scoped-properties",
   "version": "1.1.0",
   "private": true,
   "license": "MIT",
@@ -28,10 +28,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ajay126z/supercharged-properties.git"
+    "url": "git+https://github.com/RedPandaLi/supercharged-properties.git"
   },
-  "homepage": "https://github.com/ajay126z/supercharged-properties#readme",
+  "homepage": "https://github.com/RedPandaLi/supercharged-properties#readme",
   "bugs": {
-    "url": "https://github.com/ajay126z/supercharged-properties/issues"
+    "url": "https://github.com/RedPandaLi/supercharged-properties/issues"
   }
 }

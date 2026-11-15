@@ -1,6 +1,6 @@
-# Supercharged Properties user guide
+# Scoped Properties user guide
 
-Supercharged Properties displays your vault's YAML frontmatter as a tree of **properties → values → notes**. Use it to inspect metadata, find notes, organize the view, and explicitly edit matching values across notes.
+Scoped Properties displays your vault's YAML frontmatter as a tree of **properties → values → notes**. Use it to inspect metadata, find notes, organize the view, and explicitly edit matching values across notes.
 
 Browsing, searching, sorting, and saving views do not modify notes. The bulk value actions write frontmatter only after you review a preview and click Apply.
 
@@ -25,13 +25,13 @@ This guide describes version 1.1.0, including bulk editing. Earlier releases may
 
 The plugin requires Obsidian **1.7.2 or later** and supports desktop and mobile. The core Search plugin is needed only for **Open in Search**.
 
-If available in the community plugin browser, find **Supercharged Properties**, install it, and enable it. For manual installation:
+This fork is not published in the community plugin browser. For manual installation:
 
-1. Create `<YourVault>/.obsidian/plugins/supercharged-properties/`.
+1. Create `<YourVault>/.obsidian/plugins/scoped-properties/`.
 2. Copy `main.js`, `manifest.json`, and `styles.css` from the same build into that folder.
 3. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 
-Click the plugin's list-tree ribbon icon to open the sidebar. Alternatively, open the command palette and run **Supercharged Properties: Open sidebar** or **Supercharged Properties: Open in tab**.
+Click the plugin's list-tree ribbon icon to open the sidebar. Alternatively, open the command palette and run **Scoped Properties: Open sidebar** or **Scoped Properties: Open in tab**.
 
 ### Try a small example
 
@@ -49,7 +49,7 @@ published: false
 ---
 ```
 
-Open Supercharged Properties, expand `status`, then expand `doing` to find the note. Expand `topics` to see the note under both `research` and `writing`.
+Open Scoped Properties, expand `status`, then expand `doing` to find the note. Expand `topics` to see the note under both `research` and `writing`.
 
 ## Browse properties, values, and notes
 
@@ -154,7 +154,7 @@ The selected ordering applies to property and value rows. Frequency means distin
 
 Right-click a **property row** and choose **Pin property** to keep it above unpinned properties. Choose **Unpin property** to restore normal ordering. Pinning does not override the property selection, search, or hiding.
 
-Choose **Hide property** to remove a property from the tree. To restore it, open **Settings → Supercharged Properties → Hidden properties** and remove its name. Hiding changes the display only; it does not delete metadata. Hidden-property names are matched without regard to capitalization or surrounding whitespace.
+Choose **Hide property** to remove a property from the tree. To restore it, open **Settings → Scoped Properties → Hidden properties** and remove its name. Hiding changes the display only; it does not delete metadata. Hidden-property names are matched without regard to capitalization or surrounding whitespace.
 
 ## Use Obsidian Search and copy links
 
@@ -186,7 +186,7 @@ Security scanners may flag vault enumeration and clipboard access as capabilitie
 
 ## Settings and commands
 
-Open **Settings → Supercharged Properties**.
+Open **Settings → Scoped Properties**.
 
 | Setting | Purpose |
 | --- | --- |
@@ -196,7 +196,7 @@ Open **Settings → Supercharged Properties**.
 
 Preferences, pinned properties, property selections, and saved views are saved as plugin settings. They are not added to your notes. Bulk-edit undo is temporary and is not saved with preferences.
 
-Available command-palette commands use the prefix **Supercharged Properties:**.
+Available command-palette commands use the prefix **Scoped Properties:**.
 
 | Command | Purpose |
 | --- | --- |

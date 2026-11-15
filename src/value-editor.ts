@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Supercharged Properties: preview and apply frontmatter value edits.
+// Scoped Properties (fork of Supercharged Properties): preview and apply frontmatter value edits.
 
 import { App, TFile } from 'obsidian';
 import {

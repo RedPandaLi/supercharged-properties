@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Supercharged Properties: typed values for the vault property index.
+// Scoped Properties (fork of Supercharged Properties): typed values for the vault property index.
 
 export type PropertyValueKind = 'empty' | 'string' | 'number' | 'boolean';
 export interface IndexedValue { readonly kind: PropertyValueKind; readonly text: string }

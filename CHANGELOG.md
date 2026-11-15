@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Supercharged Properties are documented here.
+All notable changes to Scoped Properties are documented here. Entries below 1.1.0 are from the upstream [Supercharged Properties](https://github.com/ajay126z/supercharged-properties) project.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

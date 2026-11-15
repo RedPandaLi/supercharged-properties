@@ -1,8 +1,8 @@
 # Notices
 
-## Supercharged Properties
+## Scoped Properties
 
-Copyright (c) 2026 Ajay Zapadiya
+Scoped Properties is a fork of [Supercharged Properties](https://github.com/ajay126z/supercharged-properties). Original code and documentation are Copyright (c) 2026 Ajay Zapadiya.
 
 Licensed under the MIT License. See [LICENSE](LICENSE) for the full text.
 
@@ -10,7 +10,7 @@ SPDX-License-Identifier: `MIT`
 
 ## Third-party components
 
-Supercharged Properties does not bundle third-party runtime code. It runs inside Obsidian against the host's API.
+Scoped Properties does not bundle third-party runtime code. It runs inside Obsidian against the host's API.
 
 - **Obsidian API typings** (`obsidian` npm package) — MIT License. Used for development and type checking only; not bundled into the plugin.
 - **Lucide icons** — provided by Obsidian at runtime through `setIcon`. No icon assets are bundled.
@@ -18,4 +18,4 @@ Supercharged Properties does not bundle third-party runtime code. It runs inside
 
 ## Trademarks
 
-Obsidian is a trademark of Dynalist Inc. Supercharged Properties is an independent community plugin and is not affiliated with, endorsed by, or sponsored by Obsidian.
+Obsidian is a trademark of Dynalist Inc. Scoped Properties is an independent fork and is not affiliated with, endorsed by, or sponsored by Obsidian or the original plugin author.

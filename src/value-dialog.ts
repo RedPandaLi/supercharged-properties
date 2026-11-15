@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Supercharged Properties: confirmation dialog for bulk value edits.
+// Scoped Properties (fork of Supercharged Properties): confirmation dialog for bulk value edits.
 
 import { Modal, Notice, type App } from 'obsidian';
 import type { ValueEditMode, ValueEditRequest } from './value-operations';
