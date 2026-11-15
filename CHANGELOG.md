@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- Scope the property tree to notes sharing a value, with subset counts and note links.
+
 ### Fixed
 
 - Use Obsidian's `createEl` helpers for UI elements and specific CSS selectors instead of `!important`.

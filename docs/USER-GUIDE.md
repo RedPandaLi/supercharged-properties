@@ -12,6 +12,7 @@ This guide describes version 1.1.0, including bulk editing. Earlier releases may
 - [Browse properties, values, and notes](#browse-properties-values-and-notes)
 - [Understand values and counts](#understand-values-and-counts)
 - [Search the tree](#search-the-tree)
+- [Scope to a value](#scope-to-a-value)
 - [Choose properties](#choose-properties)
 - [Save and manage views](#save-and-manage-views)
 - [Sort, pin, and hide](#sort-pin-and-hide)
@@ -156,6 +157,14 @@ Right-click a **property row** and choose **Pin property** to keep it above unpi
 
 Choose **Hide property** to remove a property from the tree. To restore it, open **Settings → Scoped Properties → Hidden properties** and remove its name. Hiding changes the display only; it does not delete metadata. Hidden-property names are matched without regard to capitalization or surrounding whitespace.
 
+## Scope to a value
+
+Right-click a value row and choose **Filter notes by this value**. The tree then shows only notes that contain that value, and every other property is re-counted within that subset. The filtered property is hidden while the filter is active.
+
+The filter bar under the toolbar shows the condition and the number of matching notes. Choose **Clear** to return to the whole vault. Search, sorting, saved views, copied note links, and bulk value edits operate on the filtered subset. **Open in Search** and **Copy search query** still use a vault-wide query.
+
+Filters are not saved: reopening the view or reloading Obsidian returns to the whole vault.
+
 ## Use Obsidian Search and copy links
 
 Right-click a property or value row to open its menu.
@@ -174,7 +183,7 @@ Obsidian Search applies its own matching and type rules, so results may differ f
 
 Value-row menus offer **Rename value…**, **Merge value…**, **Convert to wikilink…**, and **Split into list…** when applicable. These actions change values, not property names.
 
-Read the [bulk editing guide](BULK-EDITING.md) for examples, exact matching rules, preview and confirmation, partial failures, and undo. Each operation covers matching notes across the vault regardless of your tree search or saved view. The full preview shows which notes will change.
+Read the [bulk editing guide](BULK-EDITING.md) for examples, exact matching rules, preview and confirmation, partial failures, and undo. Each operation covers the matching notes listed in the preview. Search and saved views do not restrict the edit, but an active value filter narrows it to the filtered notes. The full preview shows which notes will change.
 
 ## Data access and privacy
 

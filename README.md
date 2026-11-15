@@ -9,6 +9,7 @@ Browsing remains read-only. Explicit bulk value actions can now modify frontmatt
 ## Features
 
 - **Full property tree** — every property, its values, and the notes that use them.
+- **Scope to a value** — filter the tree to notes sharing one property value, then re-aggregate every other property and its note links within that subset.
 - **Typed value rows** — strings, numbers, booleans, empty values, and nested lists are kept distinct. Repeated values are deduplicated per note.
 - **Property type icons** — rows show the icon for the type configured in Obsidian, such as text, list, tags, number, checkbox, date, or date & time. The plugin reads `.obsidian/types.json` through public APIs and falls back to built-in names and text.
 - **Search everything or narrow the scope** — search property names, values, note names, or paths, with automatic branch expansion for matches.
@@ -88,12 +89,13 @@ The toolbar provides:
   - **Copy matching note links**
   - **Pin property** / **Unpin property**
   - **Hide property**
+- Right-click a value and choose **Filter notes by this value** to scope the tree to those notes. The filtered property is hidden while the filter is active; use **Clear** in the filter bar to return to the whole vault. Scoped filters apply to searches, counts, copied links, and bulk value edits, but **Open in Search** still runs a vault-wide query.
 
 ### Bulk value edits
 
 Right-click a value row to **Rename value**, **Merge value** into another value of the same type, **Convert to wikilink**, or **Split into list**. To merge `in-progress` and `doing` into a new `active` value, rename one to `active`, then merge the other into it. Each confirmed operation is a separate undo batch.
 
-The dialog lists every affected path and its before/after value. Actions cover matching values across the vault, regardless of search filters or saved views. Matching follows the tree's case-insensitive, Unicode-normalized identity and preserves distinct scalar types. Rename accepts text; numeric and boolean replacements retain their type when valid. Rename/merge deduplicate equal list entries. Split applies only to scalar text, using a literal delimiter, trimming parts and dropping empty parts. Wiki conversion wraps plain text in `[[…]]`; existing links and text containing brackets or newlines are skipped.
+The dialog lists every affected path and its before/after value. Actions cover the matching notes listed in the preview. Search and saved views do not restrict the edit, but an active value filter narrows it to the filtered notes. Matching follows the tree's case-insensitive, Unicode-normalized identity and preserves distinct scalar types. Rename accepts text; numeric and boolean replacements retain their type when valid. Rename/merge deduplicate equal list entries. Split applies only to scalar text, using a literal delimiter, trimming parts and dropping empty parts. Wiki conversion wraps plain text in `[[…]]`; existing links and text containing brackets or newlines are skipped.
 
 Click **Apply to N notes** to confirm. Notes whose property changed since preview are skipped. Failures are reported individually; successful notes can still be undone. Obsidian's frontmatter writer may reformat YAML, including comments and quoting; note bodies are not edited.
 
