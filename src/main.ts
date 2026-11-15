@@ -5,6 +5,10 @@ import { SortOrder, sortOptions, sortOrder, sortNodes } from './sorting';
 import { propertyQuery } from './search';
 import { loadProfiles, sameKeys, PropertyProfile } from './profiles';
 import { PropertyTypeResolver } from './property-types';
+import { ValueEditor, type ValueEditPreview, type ValueEditResult } from './value-editor';
+import { ValueEditModal } from './value-dialog';
+import { isWikilink, type ValueEditMode, type ValueEditRequest } from './value-operations';
+import type { PropertyValueKind } from './frontmatter-values';
 
 const VIEW = 'supercharged-properties';
 interface Preferences { counts: boolean; sort: SortOrder; hidden: string; expanded: string[]; pinned: string[]; scope: string[] | null; profiles: PropertyProfile[]; activeProfile: string | null }
@@ -14,6 +18,7 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
   index = new PropertyIndex();
   prefs: Preferences = { ...defaults };
   typeResolver!: PropertyTypeResolver;
+  valueEditor!: ValueEditor;
   private timer: number | undefined;
   private rebuildTimer: number | undefined;
   private saveQueue: Promise<void> = Promise.resolve();
@@ -34,11 +39,21 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
     };
     this.typeResolver = new PropertyTypeResolver(this.app);
     await this.typeResolver.load();
+    this.valueEditor = new ValueEditor(this.app);
     this.registerView(VIEW, leaf => new PropertiesView(leaf, this));
     this.addRibbonIcon('list-tree', 'Open Supercharged Properties', () => { void this.open(); });
     this.addCommand({ id: 'open', name: 'Open sidebar', callback: () => { void this.open(); } });
     this.addCommand({ id: 'open-tab', name: 'Open in tab', callback: () => { void this.openTab(); } });
     this.addCommand({ id: 'rebuild', name: 'Refresh property index', callback: () => this.rebuild() });
+    this.addCommand({
+      id: 'undo-value-edit',
+      name: 'Undo last value edit',
+      checkCallback: checking => {
+        if (!this.valueEditor.canUndo()) return false;
+        if (!checking) void this.undoValueEdit();
+        return true;
+      }
+    });
     this.addSettingTab(new PreferencesTab(this));
     this.registerEvent(this.app.metadataCache.on('changed', (file, _data, cache) => {
       this.index.update(file.path, cache.frontmatter);
@@ -103,6 +118,32 @@ export default class SuperchargedPropertiesPlugin extends Plugin {
     });
     this.refresh();
     return this.saveQueue;
+  }
+
+  async applyValueEdit(preview: ValueEditPreview): Promise<void> {
+    const result: ValueEditResult = await this.valueEditor.apply(preview);
+    new Notice(`Updated ${result.updated} notes; skipped ${result.unchanged} changed notes; ${result.failures.length} failed. Undo last value edit is available in the command palette.`, 10000);
+    for (const failure of result.failures) new Notice(`${failure.path}: ${failure.message}`, 10000);
+    this.rebuild();
+  }
+
+  async undoValueEdit(): Promise<void> {
+    const result = await this.valueEditor.undo();
+    new Notice(`Restored ${result.restored} notes; skipped ${result.skipped} later edits; ${result.failures.length} failed.`, 10000);
+    for (const failure of result.failures) new Notice(`${failure.path}: ${failure.message}`, 10000);
+    this.rebuild();
+  }
+
+  editValue(property: PropertyNode, node: ValueNode, mode: ValueEditMode): void {
+    const [kind] = JSON.parse(node.id) as [PropertyValueKind, string];
+    const request: ValueEditRequest = { property: property.id, kind, value: node.label, mode, replacement: node.label };
+    const siblings = [...property.values.values()].filter(value => value !== node && (JSON.parse(value.id) as string[])[0] === kind).map(value => value.label);
+    new ValueEditModal(this.app, {
+      request: mode === 'merge' ? { ...request, replacement: siblings[0] } : request,
+      siblings,
+      preview: edit => this.valueEditor.preview(edit, node.paths),
+      apply: preview => this.applyValueEdit(preview)
+    }).open();
   }
 
   async openTab(): Promise<void> {
@@ -532,6 +573,18 @@ export class PropertiesView extends ItemView {
         this.plugin.prefs.hidden += `\n${property.label}`; void this.plugin.save(); this.render();
         new Notice('Property hidden. Restore it in Supercharged Properties settings.');
       }));
+    }
+    if (node !== property) {
+      const [kind] = JSON.parse(node.id) as [PropertyValueKind, string];
+      const addEdit = (title: string, mode: ValueEditMode) => menu.addItem(item => item.setTitle(title).setIcon('pencil').onClick(() => this.plugin.editValue(property, node, mode)));
+      if (kind !== 'empty') {
+        addEdit('Rename value…', 'rename');
+        if ([...property.values.values()].some(value => value !== node && (JSON.parse(value.id) as string[])[0] === kind)) addEdit('Merge value…', 'merge');
+        if (kind === 'string' && !isWikilink(node.label)) {
+          addEdit('Convert to wikilink…', 'wikilink');
+          addEdit('Split into list…', 'split');
+        }
+      }
     }
     menu.showAtMouseEvent(event);
   }

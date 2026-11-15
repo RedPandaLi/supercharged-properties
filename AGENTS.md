@@ -2,7 +2,7 @@
 
 ## Project
 
-Supercharged Properties is an Obsidian plugin that indexes YAML frontmatter across the vault and renders a full-pane, read-only tree of properties, values, and notes. It supports search, sorting, property scoping, saved profiles, pinning, hiding, and native Obsidian Search integration. The plugin never writes to notes.
+Supercharged Properties is an Obsidian plugin that indexes YAML frontmatter across the vault and renders a full-pane tree of properties, values, and notes. It supports search, sorting, property scoping, saved profiles, pinning, hiding, and native Obsidian Search integration. Browsing is read-only; explicit bulk value edits use preview, confirmation, conflict checks, and session-scoped one-step undo through public processFrontMatter.
 
 - Plugin ID: `supercharged-properties`
 - Runtime entry: `src/main.ts` bundled to `main.js` (CommonJS, ES2020)
@@ -22,7 +22,7 @@ export PATH="$HOME/.nvm/versions/node/v24.22.2/bin:$PATH"
 ```sh
 npm run lint       # ESLint with eslint-plugin-obsidianmd, zero warnings allowed
 npm run build      # tsc --noEmit, then esbuild -> main.js
-npm test           # Vitest, 8 files / 57 tests
+npm test           # Vitest, 10 files / 66 tests
 npm run validate   # lint + build + test + release validation
 npm run release:prepare  # validate, then stage dist/<version>/ assets
 ```

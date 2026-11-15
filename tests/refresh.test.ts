@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 vi.mock('obsidian', () => ({
+  Modal: class {},
   Plugin: class {
     app: any; cleanups: Array<() => void> = [];
     loadData = async () => null;

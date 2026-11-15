@@ -1,0 +1,160 @@
+# Bulk value editing
+
+Bulk edits let you standardize a property's values across notes. They are explicit write actions; ordinary browsing remains read-only. These features are available starting in version 1.1.0.
+
+[Back to the user guide](USER-GUIDE.md)
+
+## Preview and confirm every batch
+
+1. Expand a property in Supercharged Properties.
+2. Right-click the value you want to change, or focus its label and press Shift+F10 / the Context Menu key.
+3. Choose an edit action and supply its replacement or delimiter if needed.
+4. Review the affected-note count and scroll through the complete list of paths and before/after values.
+5. Click **Apply to N notes** to confirm, or **Cancel** to leave notes unchanged.
+
+Preview values use JSON-style notation: `"false"` is text, `false` is a boolean, and `["a","b"]` is a list. Quotes and brackets in the preview are value notation, not a promise of the exact YAML formatting that will be written.
+
+Apply is disabled when the input is invalid, the preview is updating, or no notes would change. Closing or cancelling the dialog before Apply does not write notes. Once Apply starts, closing the dialog does not cancel the running batch.
+
+**Scope:** each action covers the indexed notes for the selected value across the vault. Search, saved views, and collapsed branches do not restrict the edit to visible notes. There is no per-note inclusion checkbox. Inspect the full preview before confirming.
+
+Before writing each note, the plugin compares the current property value with the previewed value. If it changed, the note is skipped. Other property changes do not block the edit. The completion notice reports updated, skipped, and failed notes; failures also identify the affected paths.
+
+## Rename a value
+
+Use Rename to replace the selected value with a value you type, including a new value that is not yet used.
+
+1. Open the menu for `status` → `in-progress`.
+2. Choose **Rename value…**.
+3. Enter `active` in **New value**.
+4. Review the preview and apply.
+
+Before:
+
+```yaml
+status: in-progress
+```
+
+After:
+
+```yaml
+status: active
+```
+
+Rename also replaces matching entries inside lists and nested lists. If a changed list contains equal entries after replacement, duplicates are removed while retaining the first occurrence. This can also remove pre-existing equal duplicates elsewhere in that changed list.
+
+A replacement must contain non-whitespace text. For a text source, the replacement remains text: entering `4` does not turn it into a number. For numeric sources, a valid finite numeric replacement remains numeric; otherwise it becomes text. For boolean sources, `true` or `false` remains boolean, ignoring capitalization; other replacements become text. Always check the preview's type notation.
+
+## Merge values
+
+Merge replaces one source value with another existing value of the same stored type under the same property.
+
+1. Open the source value's menu and choose **Merge value…**.
+2. Select the target in **Merge into**.
+3. Review and apply.
+
+For example, merging `doing` into `active` changes:
+
+```yaml
+status: [doing, active]
+```
+
+into:
+
+```yaml
+status: [active]
+```
+
+Merge appears only when another value of the same type exists. It operates on one source value per batch, not a multi-select group.
+
+### Combine two values under a new name
+
+To combine `in-progress` and `doing` into `active`:
+
+1. Rename `in-progress` to `active` and apply.
+2. After the tree refreshes, merge `doing` into `active` and apply.
+
+These are **two batches**. After the second succeeds, one-step undo covers only the second batch. If `active` already exists, merge each source into it separately.
+
+## Convert text to a wikilink
+
+1. Open a text value such as `author` → `Ada Lovelace`.
+2. Choose **Convert to wikilink…**.
+3. Review and apply.
+
+Before:
+
+```yaml
+author: Ada Lovelace
+```
+
+After, shown as a YAML-safe example:
+
+```yaml
+author: "[[Ada Lovelace]]"
+```
+
+The action wraps each matching string's trimmed text in `[[…]]`, including matching list entries. It preserves that string's capitalization. It does not create a target note, resolve a particular folder, or edit links in note bodies.
+
+Existing complete wikilinks do not offer this action. Strings containing brackets or line breaks are skipped. Numeric, boolean, and empty rows do not offer wikilink conversion. Unlike Rename and Merge, this operation does not deduplicate list entries.
+
+## Split text into a YAML list
+
+1. Open a text value such as `topics` → `research, writing, editing`.
+2. Choose **Split into list…**.
+3. Enter the literal separator in **Delimiter**; the default is a comma.
+4. Review and apply.
+
+Before:
+
+```yaml
+topics: research, writing, editing
+```
+
+After:
+
+```yaml
+topics:
+  - research
+  - writing
+  - editing
+```
+
+Split applies only when the property's entire stored value is a scalar string matching the selected row. It does not split strings already inside a list. The delimiter is literal and case-sensitive, not a regular expression; multi-character separators are allowed. Each part is trimmed and empty parts are discarded. At least two nonempty parts must remain for a change to occur.
+
+Parts remain text, even if they look numeric or boolean. Repeated parts are retained. This action does not change the vault's configured property type; review that separately in Obsidian if needed.
+
+## How matching works
+
+- Actions stay within the selected property; changing an author does not change the same text in another property.
+- Property names and text values match the tree's grouping: surrounding whitespace is ignored, text is Unicode-normalized, and capitalization is ignored.
+- Numbers, booleans, and text are distinct. A text `"false"` row does not match boolean `false`.
+- Empty values and objects do not offer these edit actions.
+- Rename, Merge, and wikilink conversion can affect matching scalar entries within nested lists. Split handles only a scalar property.
+- If one note contains multiple keys that normalize to the same name, such as both `Status` and `status`, the editor considers the first matching key. Review such notes individually rather than assuming both keys will change.
+
+A preview may therefore contain fewer notes than the tree row's count: some notes may already have the desired value, be ineligible for that operation, or no longer be available.
+
+## Undo the last batch
+
+Open the command palette and run **Supercharged Properties: Undo last value edit**. One invocation attempts to restore the previous property value in every successfully edited note from the last batch. Undo runs immediately; there is no second preview dialog.
+
+Undo restores a note only if its edited property still equals the value written by the batch. Later changes to that property are skipped; changes to other properties are preserved. A skipped or failed undo entry remains available for retry, and the notice reports restored, skipped, and failed counts. Retrying does not force an overwrite of a conflicting value.
+
+The undo command is available only when an undo batch exists and no edit is running. After all entries are restored, it is no longer available. There is no redo action.
+
+## Troubleshooting and limits
+
+| Situation | Meaning and next step |
+| --- | --- |
+| No notes will change | Check the replacement or delimiter and the operation's eligibility rules. For Split, confirm the source is scalar text and yields at least two parts. |
+| Merge is missing | No other value of the same stored type exists under the property. Rename can create a target value first. |
+| Notes were skipped on Apply | Their property changed after preview. Reopen the action to generate a fresh preview. |
+| Some writes failed | Successful writes remain applied and undoable. Inspect the path-specific notices and resolve the reported issue before retrying. The batch is not all-or-nothing. |
+| Undo skipped a note | The edited property no longer matches the batch's result. Inspect the note; undo will not overwrite that later value. |
+| Undo reports a missing note | It stores paths. A renamed, moved, or deleted note cannot be restored through its old path. |
+| Undo disappeared after another edit | A new batch with at least one successful write replaces the previous undo batch. A batch with no successful writes does not replace it. |
+| Undo disappeared after reload | Undo is held in memory and is cleared when the plugin is disabled, reloaded, or Obsidian restarts. |
+| YAML layout or comments changed | Obsidian's frontmatter writer may reformat YAML. Undo restores property values, not original formatting, comments, or quoting. |
+
+Edits change frontmatter property values. They do not change property names, note bodies, or configured property types. Undo is a temporary recovery convenience, not a persistent history or a replacement for vault backups.

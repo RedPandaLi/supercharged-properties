@@ -47,7 +47,7 @@ docs/                    Publishing, QA, and release notes
 
 ## Design rules
 
-- **Read-only.** The plugin must never modify notes. All data comes from Obsidian's metadata cache.
+- **Explicit writes only.** Browsing uses the metadata cache. Bulk value writes require a full preview and confirmation, must skip stale values, and retain a conflict-aware undo snapshot. Use the public frontmatter API.
 - **Never interpret note content as HTML.** Use `textContent` and the `el()` helper rather than `innerHTML`.
 - **Guard host internals.** APIs such as the Search view's `setQuery` are not part of the public typings; feature-detect and wrap them in `try/catch`.
 - **Use public property-type data.** Resolve type icons from `types.json`, built-in property names, or the text fallback. Do not use `metadataTypeManager` or other private type registries.

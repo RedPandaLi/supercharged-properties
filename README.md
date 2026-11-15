@@ -2,7 +2,7 @@
 
 Supercharged Properties is an Obsidian plugin that turns your vault's YAML frontmatter into a full-pane, browsable tree of **properties → values → notes**. Explore how metadata is used across your vault, filter it, save focused views, and jump straight to the notes you need.
 
-The plugin is read-only: it indexes frontmatter through Obsidian's metadata cache and never modifies your notes.
+Browsing remains read-only. Explicit bulk value actions can now modify frontmatter after you review and confirm a preview.
 
 ## Features
 
@@ -83,6 +83,16 @@ The toolbar provides:
   - **Pin property** / **Unpin property**
   - **Hide property**
 
+### Bulk value edits
+
+Right-click a value row to **Rename value**, **Merge value** into another value of the same type, **Convert to wikilink**, or **Split into list**. To merge `in-progress` and `doing` into a new `active` value, rename one to `active`, then merge the other into it. Each confirmed operation is a separate undo batch.
+
+The dialog lists every affected path and its before/after value. Actions cover matching values across the vault, regardless of search filters or saved views. Matching follows the tree's case-insensitive, Unicode-normalized identity and preserves distinct scalar types. Rename accepts text; numeric and boolean replacements retain their type when valid. Rename/merge deduplicate equal list entries. Split applies only to scalar text, using a literal delimiter, trimming parts and dropping empty parts. Wiki conversion wraps plain text in `[[…]]`; existing links and text containing brackets or newlines are skipped.
+
+Click **Apply to N notes** to confirm. Notes whose property changed since preview are skipped. Failures are reported individually; successful notes can still be undone. Obsidian's frontmatter writer may reformat YAML, including comments and quoting; note bodies are not edited.
+
+Use **Supercharged Properties: Undo last value edit** in the command palette to restore the previous property values in one step. Undo preserves other properties and skips values edited since the batch. Failed or skipped undo entries can be retried. Undo is held in memory: another successful batch replaces it, and restarting or disabling the plugin clears it. Renamed or deleted notes cannot be restored through their old paths. This is a property-value undo, not a byte-for-byte YAML formatting restore.
+
 ### Search scopes
 
 Use the sliders button next to the search field to search:
@@ -133,10 +143,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, testing, and review con
 
 ## Documentation
 
+- [User guide](docs/USER-GUIDE.md)
+- [Bulk value editing and undo](docs/BULK-EDITING.md)
+- [Documentation index](docs/README.md)
+
 - [Contributing](CONTRIBUTING.md)
 - [Publishing](docs/PUBLISHING.md)
 - [Release QA](docs/RELEASE-QA.md)
 - [Changelog](CHANGELOG.md)
+- [1.1.0 release notes](docs/releases/1.1.0.md)
 - [1.0.3 release notes](docs/releases/1.0.3.md)
 - [1.0.2 release notes](docs/releases/1.0.2.md)
 - [1.0.1 release notes](docs/releases/1.0.1.md)

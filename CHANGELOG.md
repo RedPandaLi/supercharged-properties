@@ -6,6 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-14
+
+### Added
+
+- Bulk value rename, merge, wikilink conversion, and scalar text-to-list splitting from value-row menus.
+- Complete affected-note previews and explicit confirmation before writes.
+- Conflict-aware, session-scoped one-step undo, with partial-failure reporting and retries.
+- User guide and bulk-editing walkthrough covering all features and limitations.
+- Automated coverage for value transforms, previews, stale values, write failures, concurrent edits, and undo.
+
+### Changed
+
+- Browsing remains read-only; explicitly confirmed value actions can now modify frontmatter across the vault.
+- Renaming and merging deduplicate equal entries in changed lists.
+
+
 ## [1.0.3] - 2026-11-14
 
 ### Added

@@ -67,3 +67,11 @@
 .pv-profile-row { margin-top:0; }
 .pv-profile-select { background-color:transparent; border:0; color:var(--text-normal); }
 .pv-profile-row .pv-icon-button[aria-expanded="true"], .pv-nav-actions button[aria-pressed="true"], .pv-search-header button[data-filtered="true"] { color:var(--text-accent); background:var(--background-modifier-hover); }
+
+.pv-edit-field { display: flex; flex-direction: column; gap: 8px; }
+.pv-edit-preview { max-height: 45vh; overflow: auto; margin-block: 16px; }
+.pv-edit-change { padding: 8px; border-bottom: 1px solid var(--background-modifier-border); }
+.pv-edit-path, .pv-edit-values { display: block; overflow-wrap: anywhere; white-space: pre-wrap; }
+.pv-edit-path { font-weight: var(--font-semibold); }
+.pv-edit-hint { color: var(--text-muted); }
+.pv-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
